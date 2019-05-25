@@ -3,7 +3,6 @@
 const request = require('axios');
 const moment = require('moment');
 
-const elasticsearch = require('elasticsearch');
 const es = require('elasticsearch').Client({
   hosts: process.env.ES_URL,
   connectionClass: require('http-aws-es'),
@@ -16,16 +15,19 @@ const es = require('elasticsearch').Client({
 
 const aws = require('aws-sdk');
 aws.config.update({region: process.env.REGION});
-const ddb = new aws.DynamoDB();
+const ddb = new aws.DynamoDB.DocumentClient();
 
 module.exports.crawl = async () => {
   try{
     //Get the start index
-    const response = await ddb.getItem({
-      TableName: process.env.DYNAMODB_TABLE,
-      Key: {id: process.env.START_INDEX_ID}
+    const response = await ddb.get({
+      TableName : process.env.DYNAMODB_TABLE,
+      Key: {
+        id: process.env.START_INDEX_ID
+      }
     }).promise();
-    const startIndex = moment(response.items[0].startIndex);
+    const startIndex = moment(response.Item.startIndex);
+    const badGames = response.Item.badGames;
 
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
@@ -41,6 +43,14 @@ module.exports.crawl = async () => {
         // Check that the game state is final
         if(response.data.gameData.status.abstractGameState !== 'Final')
           throw 'game state not final yet!';
+
+        // Some games are missing events???
+        if(response.data.liveData.plays.allPlays.length === 0)
+        {
+          console.log(`Bad game found... [${gamePk}]`);
+          badGames.push(gamePk);
+          continue;
+        }
       
         // Parse the game data
         const events = parseEvents(response, gamePk)
@@ -63,11 +73,12 @@ module.exports.crawl = async () => {
 
     // Increment and save the new startIndex
     startIndex.add(1, 'days');
-    await ddb.putItem({
-      TableName: process.env.DYNAMODB_TABLE,
+    await ddb.put({
+      TableName : process.env.DYNAMODB_TABLE,
       Item: {
-        id : {S: 'CrawlerIndex'},
-        startIndex : {S: startIndex.format('YYYY-MM-DD')}
+         id: process.env.START_INDEX_ID,
+         startIndex: startIndex.format('YYYY-MM-DD'),
+         badGames
       }
     }).promise();
 
@@ -127,7 +138,8 @@ function parseEvents(response, gamePk) {
       players = play.players.map(player => {
         return {
           player_id: player.player.id,
-          player_type: player.playerType
+          player_type: player.playerType,
+          player_handedness: response.data.gameData.players['ID' + player.player.id].shootsCatches
         };
       });
     }

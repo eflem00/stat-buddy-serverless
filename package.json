@@ -1,5 +1,5 @@
 {
-  "name": "test-lambda",
+  "name": "stat-buddy-crawler",
   "version": "1.0.0",
   "description": "",
   "main": "handler.js",
@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.462.0",
     "axios": "^0.18.0",
@@ -15,5 +15,9 @@
     "http-aws-es": "^6.0.0",
     "moment": "^2.24.0",
     "request": "^2.88.0"
+  },
+  "devDependencies": {
+    "serverless-dynamodb-local": "^0.2.37",
+    "serverless-offline": "^3.8.3"
   }
 }
