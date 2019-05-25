@@ -4,25 +4,29 @@ const request = require('axios');
 const moment = require('moment');
 
 const elasticsearch = require('elasticsearch');
-const es = new elasticsearch.Client({host: 'localhost:9200'});
+const es = require('elasticsearch').Client({
+  hosts: process.env.ES_URL,
+  connectionClass: require('http-aws-es'),
+  amazonES: {
+      region: process.env.REGION,
+      accessKey: process.env.AWS_ACCESS_KEY_ID,
+      secretKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
 
-// const aws = require('aws-sdk');
-// AWS.config.update({region: 'us-west-2'});
-// const ddb = new aws.DynamoDB();
+const aws = require('aws-sdk');
+aws.config.update({region: process.env.REGION});
+const ddb = new aws.DynamoDB();
 
-const _index = 'events';
-const _type = 'event';
-
-module.exports.crawl = async (event, context, callback) => {
+module.exports.crawl = async () => {
   try{
+    //Get the start index
+    const response = await ddb.getItem({
+      TableName: process.env.DYNAMODB_TABLE,
+      Key: {id: process.env.START_INDEX_ID}
+    }).promise();
+    const startIndex = moment(response.items[0].startIndex);
 
-    // Get the start index
-    // const eventsIndex = await ddb.getItem({
-    //   TableName: 'CRAWL_INDEXES',
-    //   Key: {'INDEX_NAME': {S: 'EVENT_INDEX'}}
-    // });
-    // const startIndex = moment(eventsIndex);
-    const startIndex = moment('2017-01-03');
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
     // Get the games for the given startIndex
@@ -39,22 +43,7 @@ module.exports.crawl = async (event, context, callback) => {
           throw 'game state not final yet!';
       
         // Parse the game data
-        const events = [];
-        const gameData = {
-          game_pk: gamePk,
-          game_type: response.data.gameData.game.type,
-          game_season: response.data.gameData.game.season,
-          game_date: response.data.gameData.dateTime,
-          away_team: response.data.gameData.teams.away.id,
-          home_team: response.data.gameData.teams.home.id,
-          venue: response.data.gameData.venue.name
-        };
-        response.data.liveData.plays.allPlays.forEach((play) => {
-          const _id = gamePk.toString() + play.about.eventId.toString();
-          const doc = buildDoc(play, gameData);
-          events.push({ index: {_index, _type, _id}});
-          events.push(doc);
-        });
+        const events = parseEvents(response, gamePk)
 
         // Insert the events in elastic search
         const bulkResponse = await es.bulk({ body: events });
@@ -73,14 +62,14 @@ module.exports.crawl = async (event, context, callback) => {
     }
 
     // Increment and save the new startIndex
-    // startIndex.add(1, 'days');
-    // await ddb.putItem({
-    //   TableName: 'CRAWL_INDEXES',
-    //   Item: {
-    //     'INDEX_NAME' : {S: 'EVENT_INDEX'},
-    //     'DATE' : {S: startIndex.format('YYYY-MM-DD')}
-    //   }
-    // });
+    startIndex.add(1, 'days');
+    await ddb.putItem({
+      TableName: process.env.DYNAMODB_TABLE,
+      Item: {
+        id : {S: 'CrawlerIndex'},
+        startIndex : {S: startIndex.format('YYYY-MM-DD')}
+      }
+    }).promise();
 
     console.log('Finished crawling for date: ', startIndex.format('YYYY-MM-DD'));
   } catch(ex) {
@@ -88,47 +77,64 @@ module.exports.crawl = async (event, context, callback) => {
   }
 };
 
-function buildDoc(play, gameData) {
-  const doc = {...gameData};
+function parseEvents(response, gamePk) {
+  const events = [];
 
-  if(play.result !== undefined){
-    doc.event_type_id = play.result.eventTypeId;
-    doc.event_code = play.result.eventCode;
-    doc.event = play.result.event;
-  }
+  const gameData = {
+    game_pk: gamePk,
+    game_type: response.data.gameData.game.type,
+    game_season: response.data.gameData.game.season,
+    game_start_date: response.data.gameData.datetime.dateTime,
+    game_end_date: response.data.gameData.datetime.endDateTime,
+    away_team: response.data.gameData.teams.away.id,
+    home_team: response.data.gameData.teams.home.id,
+    venue: response.data.gameData.venue.name
+  };
 
-  if(play.about !== undefined){
-    doc.event_idx = play.about.eventIdx;
-    doc.event_id = play.about.eventId;
-    doc.period = play.about.period;
-    doc.period_type = play.about.periodType;
-    doc.ordinal_num = play.about.ordinalNum;
-    doc.period_time = play.about.periodTime;
-    doc.period_time_remaining = play.about.periodTimeRemaining;
-    doc.date_time = play.about.dateTime;
-    doc.away_goals = play.about.goals.away;
-    doc.home_goals = play.about.goals.home;
-  }
+  response.data.liveData.plays.allPlays.forEach((play) => {
+    const doc = {...gameData};
 
-  if(play.coordinates !== undefined){
-    doc.x = play.coordinates.x;
-    doc.y = play.coordinates.y;
-  }
+    if(play.result !== undefined){
+      doc.event_type_id = play.result.eventTypeId;
+      doc.event_code = play.result.eventCode;
+      doc.event = play.result.event;
+    }
+  
+    if(play.about !== undefined){
+      doc.event_idx = play.about.eventIdx;
+      doc.event_id = play.about.eventId;
+      doc.period = play.about.period;
+      doc.period_type = play.about.periodType;
+      doc.ordinal_num = play.about.ordinalNum;
+      doc.period_time = play.about.periodTime;
+      doc.period_time_remaining = play.about.periodTimeRemaining;
+      doc.date_time = play.about.dateTime;
+      doc.away_goals = play.about.goals.away;
+      doc.home_goals = play.about.goals.home;
+    }
+  
+    if(play.coordinates !== undefined){
+      doc.x = play.coordinates.x;
+      doc.y = play.coordinates.y;
+    }
+  
+    if(play.team !== undefined){
+      doc.team_id = play.team.id;
+    }
+  
+    let players =  [];
+    if(play.players !== undefined){
+      players = play.players.map(player => {
+        return {
+          player_id: player.player.id,
+          player_type: player.playerType
+        };
+      });
+    }
+    doc.players = players;
+    events.push({ index: {_index: 'events', _type: 'event', _id: gamePk.toString() + play.about.eventIdx.toString()}});
+    events.push(doc);
+  });
 
-  if(play.team !== undefined){
-    doc.team_id = play.team.id;
-  }
-
-  let players =  [];
-  if(play.players !== undefined){
-    players = play.players.map(player => {
-      return {
-        player_id: player.player.id,
-        player_type: player.playerType
-      };
-    });
-  }
-  doc.players = players;
-
-  return doc;
+  return events;
 }

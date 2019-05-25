@@ -1,6 +1,6 @@
 const elasticsearch = require('elasticsearch');
 const es = new elasticsearch.Client({
-  host: 'localhost:9200'
+  host: 'https://search-stat-buddy-es-xt44xcxdvppcdg4dgsspz7lh5q.us-west-2.es.amazonaws.com/'
 });
 const _index = 'events';
 const _type = 'event';

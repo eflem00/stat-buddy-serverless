@@ -1,8 +1,34 @@
-service: test-lambda
+service: stat-buddy-crawler
 
 provider:
   name: aws
   runtime: nodejs10.x
+  region: 'us-west-2'
+  timeout: 120
+  stage: prod
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
+    START_INDEX_ID: 'CrawlerIndex'
+    ES_URL: https://search-stat-buddy-es-xt44xcxdvppcdg4dgsspz7lh5q.us-west-2.es.amazonaws.com/
+    REGION: ${self:provider.region}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+    - Effect: Allow
+      Action: 
+        - es:ESHttpHead
+        - es:ESHttpPost
+        - es:ESHttpGet
+        - es:ESHttpDelete
+        - es:ESHttpPut
+      Resource: "arn:aws:es:us-west-2:198547082312:domain/stat-buddy-es"
 
 functions:
   crawl:
@@ -10,18 +36,21 @@ functions:
     events:
       - schedule: cron(0/5 * * * ? *)
 
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
+resources:
+  Resources:
+    StatBuddyCrawlerDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
