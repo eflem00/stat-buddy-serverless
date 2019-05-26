@@ -30,7 +30,7 @@ module.exports.crawl = async (event, context, callback) => {
     // const badGames = response.Item.badGames ? response.Item.badGames : [];
     // const bulkErrors = response.Item.bulkErrors ? response.Item.bulkErrors : [];
 
-    const startIndex = moment('2011-01-01');
+    const startIndex = moment('2018-01-03');
     const badGames = [];
     const bulkErrors = [];
 
@@ -99,58 +99,70 @@ function parseData(gamePk, gameEvents, gameShifts) {
     game_season: gameEvents.data.gameData.game.season,
     game_start_date: gameEvents.data.gameData.datetime.dateTime,
     game_end_date: gameEvents.data.gameData.datetime.endDateTime,
-    away_team: gameEvents.data.gameData.teams.away.id,
-    home_team: gameEvents.data.gameData.teams.home.id,
     venue: gameEvents.data.gameData.venue.name
   };
 
   gameEvents.data.liveData.plays.allPlays.forEach((play) => {
     const doc = {...gameData};
 
-    if(play.result !== undefined){
-      doc.event_type_id = play.result.eventTypeId;
-      doc.event_code = play.result.eventCode;
-      doc.event = play.result.event;
+    // Results
+    doc.event_type_id = play.result.eventTypeId;
+    doc.event_code = play.result.eventCode;
+    doc.event = play.result.event;
+    doc.game_winning_goal = play.result.gameWinningGoal;
+    if(play.result.strength !== undefined){
+      doc.strength = play.result.strength.code;
     }
+    // About
+    doc.event_idx = play.about.eventIdx;
+    doc.event_id = play.about.eventId;
+    doc.period = play.about.period;
+    doc.period_type = play.about.periodType;
+    doc.ordinal_num = play.about.ordinalNum;
+    doc.period_time = play.about.periodTime;
+    doc.period_time_remaining = play.about.periodTimeRemaining;
+    doc.date_time = play.about.dateTime;
+    // Coordinates
+    doc.x = play.coordinates.x;
+    doc.y = play.coordinates.y;
   
-    if(play.about !== undefined){
-      doc.event_idx = play.about.eventIdx;
-      doc.event_id = play.about.eventId;
-      doc.period = play.about.period;
-      doc.period_type = play.about.periodType;
-      doc.ordinal_num = play.about.ordinalNum;
-      doc.period_time = play.about.periodTime;
-      doc.period_time_remaining = play.about.periodTimeRemaining;
-      doc.date_time = play.about.dateTime;
-      doc.away_goals = play.about.goals.away;
-      doc.home_goals = play.about.goals.home;
-    }
-  
-    if(play.coordinates !== undefined){
-      doc.x = play.coordinates.x;
-      doc.y = play.coordinates.y;
-    }
-  
+    let teams = [];
     if(play.team !== undefined){
-      doc.team_id = play.team.id;
+      const primaryTeamHome = play.team.id === gameEvents.data.gameData.teams.home.id;
+      // Primary Team
+      teams.push({
+        id: play.team.id,
+        status: primaryTeamHome ? 'Home': 'Away',
+        type: 'Primary',
+        goals: primaryTeamHome ? play.about.goals.home : play.about.goals.away
+      });
+      // Secondary Team
+      teams.push({
+        id: primaryTeamHome ? gameEvents.data.gameData.teams.away.id : gameEvents.data.gameData.teams.home.id,
+        status: primaryTeamHome ? 'Away': 'Home',
+        type: 'Secondary',
+        goals: primaryTeamHome ? play.about.goals.away : play.about.goals.home
+      });
     }
+    doc.teams = teams;
   
-    //Players on ice for event
+    // Players involved in play
     let players =  [];
     if(play.players !== undefined){
       players = play.players.map(player => {
         return {
-          player_id: player.player.id,
-          player_type: player.playerType,
-          player_handedness: gameEvents.data.gameData.players['ID' + player.player.id].shootsCatches
+          id: player.player.id,
+          type: player.playerType,
+          handedness: gameEvents.data.gameData.players['ID' + player.player.id].shootsCatches
         };
       });
     }
+    // Players on ice for event
     gameShifts.data.data.forEach(gameShift => {
       const startTime = moment(gameShift.startTime, 'mm:ss');
       const endTime = moment(gameShift.endTime, 'mm:ss');
       const playTime = moment(play.about.periodTime, 'mm:ss');
-      const playerAlreadyAdded = players.some(player => player.player_id === gameShift.playerId);
+      const playerAlreadyAdded = players.some(player => player.id === gameShift.playerId);
 
       // Two scenarios:
       //    1) the time of the event is 00:00 so we want to include those who started there shift at this time
@@ -161,15 +173,14 @@ function parseData(gamePk, gameEvents, gameShifts) {
           (moment('00:00', 'mm:ss').isSame(playTime) && playTime >= startTime && playTime <= endTime))
       ){
         players.push({
-          player_id: gameShift.playerId,
-          player_type: 'OnIce'
+          id: gameShift.playerId,
+          type: 'OnIce'
         });
       }
     });
     doc.players = players;
 
-    //Add records to array
-    events.push({ index: {_index: 'events2', _type: 'event', _id: gamePk.toString() + play.about.eventIdx.toString()}});
+    events.push({ index: {_index: 'events2', _type: 'event', _id: doc.game_pk.toString() + doc.event_idx.toString()}});
     events.push(doc);
   });
 

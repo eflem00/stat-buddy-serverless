@@ -1,0 +1,25 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::198547082312:role/stat-buddy-crawler-prod-us-west-2-lambdaRole"
+      },
+      "Action": "es:*",
+      "Resource": "arn:aws:es:us-west-2:198547082312:domain/stat-buddy-es/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": [
+        "es:ESHttpGet",
+        "es:ESHttpHead",
+        "es:ESHttpPost"
+      ],
+      "Resource": "arn:aws:es:us-west-2:198547082312:domain/stat-buddy-es/events/event/*"
+    }
+  ]
+}
