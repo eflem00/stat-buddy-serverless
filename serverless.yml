@@ -4,7 +4,7 @@ provider:
   name: aws
   runtime: nodejs10.x
   region: 'us-west-2'
-  timeout: 120
+  timeout: 55
   stage: prod
   environment:
     DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
@@ -34,7 +34,7 @@ functions:
   crawl:
     handler: handler.crawl
     events:
-      - schedule: cron(0/5 * * * ? *)
+      - schedule: cron(0/1 * * * ? *)
 
 resources:
   Resources:
