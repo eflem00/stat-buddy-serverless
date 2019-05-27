@@ -20,19 +20,19 @@ const ddb = new aws.DynamoDB.DocumentClient();
 module.exports.crawl = async () => {
   try{
     //Get the start index
-    const response = await ddb.get({
-      TableName : process.env.DYNAMODB_TABLE,
-      Key: {
-        id: process.env.START_INDEX_ID
-      }
-    }).promise();
-    const startIndex = response.Item.startIndex ? moment(response.Item.startIndex) : moment('2010-10-07');
-    const badGames = response.Item.badGames ? response.Item.badGames : [];
-    const bulkErrors = response.Item.bulkErrors ? response.Item.bulkErrors : [];
+    // const response = await ddb.get({
+    //   TableName : process.env.DYNAMODB_TABLE,
+    //   Key: {
+    //     id: process.env.START_INDEX_ID
+    //   }
+    // }).promise();
+    // const startIndex = response.Item.startIndex ? moment(response.Item.startIndex) : moment('2010-10-07');
+    // const badGames = response.Item.badGames ? response.Item.badGames : [];
+    // const bulkErrors = response.Item.bulkErrors ? response.Item.bulkErrors : [];
 
-    // const startIndex = moment('2018-01-03');
-    // const badGames = [];
-    // const bulkErrors = [];
+    const startIndex = moment('2018-02-26');  // This one has an empty plays array
+    const badGames = [];
+    const bulkErrors = [];
 
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
@@ -47,19 +47,24 @@ module.exports.crawl = async () => {
         const gameShifts = await request(`http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=${gamePk}`);
 
         // Check that the game state is final
-        if(gameEvents.data.gameData.status.abstractGameState !== 'Final')
+        if(gameEvents.data.gameData.status.abstractGameState !== 'Final'){
            throw 'Game state not final yet';
-
-        // Some games are missing events???
-        if(gameEvents.data.liveData.plays.allPlays.length === 0 || gameShifts.data.data.length === 0)
-        {
-          console.log(`Bad game found... [${gamePk}]`);
-          badGames.push(gamePk);
-          continue;
         }
 
-        // Parse the game data
-        const events = parseData(gamePk, gameEvents, gameShifts);
+        // Some games are missing shifts...
+        if(gameShifts.data.data.length === 0)
+        {
+          console.log(`No shift data found... [${gamePk}]`);
+          badGames.push(gamePk);
+        }
+        
+        //Some games are missing plays...
+        let events = [];
+        if(gameEvents.data.liveData.plays.allPlays.length > 0){
+          events = parseData(gamePk, gameEvents, gameShifts);
+        } else {
+          events = constructData(gamePk, gameEvents);
+        }
 
         // Insert the events in elastic search
         const bulkResponse = await es.bulk({ body: events });
@@ -70,16 +75,16 @@ module.exports.crawl = async () => {
     }
 
     // Increment and save the new startIndex
-    startIndex.add(1, 'days');
-    await ddb.put({
-      TableName : process.env.DYNAMODB_TABLE,
-      Item: {
-         id: process.env.START_INDEX_ID,
-         startIndex: startIndex.format('YYYY-MM-DD'),
-         badGames,
-         bulkErrors,
-      }
-    }).promise();
+    // startIndex.add(1, 'days');
+    // await ddb.put({
+    //   TableName : process.env.DYNAMODB_TABLE,
+    //   Item: {
+    //      id: process.env.START_INDEX_ID,
+    //      startIndex: startIndex.format('YYYY-MM-DD'),
+    //      badGames,
+    //      bulkErrors,
+    //   }
+    // }).promise();
 
     console.log('Finished crawling for date: ', startIndex.format('YYYY-MM-DD'));
   } catch(ex) {
@@ -180,6 +185,42 @@ function parseData(gamePk, gameEvents, gameShifts) {
     events.push({ index: {_index: 'events2', _type: 'event', _id: doc.game_pk.toString() + doc.event_idx.toString()}});
     events.push(doc);
   });
+
+  return events;
+}
+
+function constructData(gamePk, gameEvents){
+  const events = [];
+
+  const gameData = {
+    game_pk: gamePk,
+    game_type: gameEvents.data.gameData.game.type,
+    game_season: gameEvents.data.gameData.game.season,
+    game_start_date: gameEvents.data.gameData.datetime.dateTime,
+    game_end_date: gameEvents.data.gameData.datetime.endDateTime,
+    venue: gameEvents.data.gameData.venue.name
+  };
+
+  const players = gameEvents.liveData.boxscore.players;
+  let eventIdx = 0;
+  for (const player in players) {
+    if (players.hasOwnProperty(player)) {
+          //TODO...
+
+          //Goal events
+
+          //shot events
+
+          //blocked shot events
+
+          //hit events
+
+          //faceoff events
+
+          //...
+    }
+    eventIdx++;
+  }
 
   return events;
 }
