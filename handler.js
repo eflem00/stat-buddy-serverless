@@ -13,29 +13,26 @@ const es = require('elasticsearch').Client({
   }
 });
 
-// const aws = require('aws-sdk');
-// aws.config.update({region: process.env.REGION});
-// const ddb = new aws.DynamoDB.DocumentClient();
+const aws = require('aws-sdk');
+aws.config.update({region: process.env.REGION});
+const ddb = new aws.DynamoDB.DocumentClient();
 
-module.exports.crawl = async (event, context, callback) => {
+module.exports.crawl = async () => {
   try{
     //Get the start index
-    // const response = await ddb.get({
-    //   TableName : process.env.DYNAMODB_TABLE,
-    //   Key: {
-    //     id: process.env.START_INDEX_ID
-    //   }
-    // }).promise();
-    // const startIndex = response.Item.startIndex ? moment(response.Item.startIndex) : moment('2007-09-29');
-    // const badGames = response.Item.badGames ? response.Item.badGames : [];
-    // const bulkErrors = response.Item.bulkErrors ? response.Item.bulkErrors : [];
+    const response = await ddb.get({
+      TableName : process.env.DYNAMODB_TABLE,
+      Key: {
+        id: process.env.START_INDEX_ID
+      }
+    }).promise();
+    const startIndex = response.Item.startIndex ? moment(response.Item.startIndex) : moment('2010-10-07');
+    const badGames = response.Item.badGames ? response.Item.badGames : [];
+    const bulkErrors = response.Item.bulkErrors ? response.Item.bulkErrors : [];
 
-    const startIndex = moment('2018-01-03');
-    const badGames = [];
-    const bulkErrors = [];
-
-    if(startIndex >= moment().subtract(2, 'days'))
-      throw 'Start index can not be greater than two days ago...';
+    // const startIndex = moment('2018-01-03');
+    // const badGames = [];
+    // const bulkErrors = [];
 
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
@@ -73,16 +70,16 @@ module.exports.crawl = async (event, context, callback) => {
     }
 
     // Increment and save the new startIndex
-    // startIndex.add(1, 'days');
-    // await ddb.put({
-    //   TableName : process.env.DYNAMODB_TABLE,
-    //   Item: {
-    //      id: process.env.START_INDEX_ID,
-    //      startIndex: startIndex.format('YYYY-MM-DD'),
-    //      badGames,
-    //      bulkErrors,
-    //   }
-    // }).promise();
+    startIndex.add(1, 'days');
+    await ddb.put({
+      TableName : process.env.DYNAMODB_TABLE,
+      Item: {
+         id: process.env.START_INDEX_ID,
+         startIndex: startIndex.format('YYYY-MM-DD'),
+         badGames,
+         bulkErrors,
+      }
+    }).promise();
 
     console.log('Finished crawling for date: ', startIndex.format('YYYY-MM-DD'));
   } catch(ex) {
