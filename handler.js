@@ -17,6 +17,9 @@ const aws = require('aws-sdk');
 aws.config.update({region: process.env.REGION});
 const ddb = new aws.DynamoDB.DocumentClient();
 
+const _index = 'events2';
+const _type = 'event';
+
 module.exports.crawl = async () => {
   try{
     //Get the start index
@@ -30,7 +33,7 @@ module.exports.crawl = async () => {
     // const badGames = response.Item.badGames ? response.Item.badGames : [];
     // const bulkErrors = response.Item.bulkErrors ? response.Item.bulkErrors : [];
 
-    const startIndex = moment('2018-02-26');  // This one has an empty plays array
+    const startIndex = moment('2018-02-23');  // This one has an empty plays array
     const badGames = [];
     const bulkErrors = [];
 
@@ -75,12 +78,11 @@ module.exports.crawl = async () => {
     }
 
     // Increment and save the new startIndex
-    // startIndex.add(1, 'days');
     // await ddb.put({
     //   TableName : process.env.DYNAMODB_TABLE,
     //   Item: {
     //      id: process.env.START_INDEX_ID,
-    //      startIndex: startIndex.format('YYYY-MM-DD'),
+    //      startIndex: startIndex.add(1, 'days').format('YYYY-MM-DD'),
     //      badGames,
     //      bulkErrors,
     //   }
@@ -182,7 +184,8 @@ function parseData(gamePk, gameEvents, gameShifts) {
     });
     doc.players = players;
 
-    events.push({ index: {_index: 'events2', _type: 'event', _id: doc.game_pk.toString() + doc.event_idx.toString()}});
+    const _id = doc.game_pk.toString() + doc.event_idx.toString();
+    events.push({ index: {_index, _type, _id}});
     events.push(doc);
   });
 
@@ -198,30 +201,56 @@ function constructData(gamePk, gameEvents){
     game_season: gameEvents.data.gameData.game.season,
     game_start_date: gameEvents.data.gameData.datetime.dateTime,
     game_end_date: gameEvents.data.gameData.datetime.endDateTime,
-    venue: gameEvents.data.gameData.venue.name
+    venue: gameEvents.data.gameData.venue.name,
+    date_time: gameEvents.data.gameData.datetime.dateTime,
   };
 
-  const players = gameEvents.liveData.boxscore.players;
+  const players = gameEvents.data.liveData.boxscore.players;
   let eventIdx = 0;
-  for (const player in players) {
+  for (let player in players) {
     if (players.hasOwnProperty(player)) {
-          //TODO...
+      const playerId = player.person.id;
+      const handedness = player.person.shootsCatches;
 
-          //Goal events
+      const teamId = gameEvents.data.gameData.players['ID' + id].currentTeam.Id;
+      const otherTeamId = gameEvents.data.gameData.teams.away.id === teamId ? gameEvents.data.gameData.teams.home.id : gameEvents.data.gameData.teams.away.id;
+      const teams = [
+        {
+          id: teamId, 
+          type: 'Primary',
+          status: gameEvents.data.gameData.teams.away.id === teamId ? 'Away' : 'Home'
+        },
+        {
+          id: otherTeamId,
+          type: 'Secondary',
+          status: gameEvents.data.gameData.teams.away.id === otherTeamId ? 'Away' : 'Home'
+        }
+      ];
 
-          //shot events
+      // All three of these require comparing across players...
+      // - Goal/Assist events
+      // - Shooter/Blocker events
+      // - Faceoff events
 
-          //blocked shot events
+      const hits = player.stats.skaterStats.hits;
+      while(hits > 0){
+        const doc = {...gameData};
 
-          //hit events
+        doc.event_type_id = 'HIT';
+        doc.event = 'Hit';
+        doc.strength = 'EVEN';
+        doc.players = [{id: playerId, type: 'Hitter'}];
+        doc.teams = teams;
 
-          //faceoff events
+        events.push({ index: {_index, _type, _id: gamePk.toString() + eventIdx.toString()}});
+        events.push(doc);
 
-          //...
+        hits--;
+        eventIdx++;
+      }
     }
-    eventIdx++;
   }
-
+  console.log(events);
   return events;
 }
 
