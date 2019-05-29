@@ -2,7 +2,7 @@ const request = require('axios');
 const moment = require('moment');
 const aws = require('aws-sdk');
 const parseLivePlays = require('./parseLivePlays');
-const parseBoxScores = require('./parseBoxScores');
+const constructLivePlays = require('./constructLivePlays');
 
 aws.config.update({ region: process.env.REGION });
 // const ddb = new aws.DynamoDB.DocumentClient();
@@ -13,7 +13,7 @@ module.exports.crawl = async () => {
     // const response = await ddb.get({
     //   TableName : process.env.DYNAMODB_TABLE,
     //   Key: {
-    //     id: process.env.STARTindex_ID
+    //     id: process.env.START_INDEX_ID
     //   }
     // }).promise();
     // const startIndex = response.Item.startIndex ? moment(response.Item.startIndex) : moment('2010-10-07');
@@ -51,11 +51,12 @@ module.exports.crawl = async () => {
           if (gameEvents.data.liveData.plays.allPlays.length > 0) {
             events = parseLivePlays(gamePk, gameEvents, gameShifts);
           } else {
-            events = parseBoxScores(gamePk, gameEvents);
+            events = constructLivePlays(gamePk, gameEvents);
           }
 
-          for (let i = 0; i < 10; i += 1) {
-            console.log(events[i]);
+          // Log some of the data
+          for (let i = 0; i < events.length; i += 1) {
+            console.log(events[i].players.length);
           }
         }
       }
@@ -65,10 +66,9 @@ module.exports.crawl = async () => {
     // await ddb.put({
     //   TableName : process.env.DYNAMODB_TABLE,
     //   Item: {
-    //      id: process.env.STARTindex_ID,
+    //      id: process.env.START_INDEX_ID,
     //      startIndex: startIndex.add(1, 'days').format('YYYY-MM-DD'),
     //      badGames,
-    //      bulkErrors,
     //   }
     // }).promise();
 

@@ -1,6 +1,3 @@
-const index = 'events2';
-const type = 'event';
-
 function countToArray(count, playerId, handedness) {
   const arr = [];
   let i = count;
@@ -107,17 +104,16 @@ function constructDocs(totals, opponentTotals, teams, gameData, i) {
         type: 'Assist',
       });
     }
+    if (opponentTotals.goalieId !== undefined) {
+      doc.players.push({
+        id: opponentTotals.goalieId,
+        type: 'Goalie',
+      });
+    }
 
     doc.teams = teams;
 
-    const id = doc.game_pk.toString() + doc.event_idx.toString();
-    events.push({
-      index: {
-        index,
-        type,
-        id,
-      },
-    });
+    doc.id = doc.game_pk.toString() + doc.event_idx.toString();
     events.push(doc);
     eventIdx += 1;
   }
@@ -147,14 +143,7 @@ function constructDocs(totals, opponentTotals, teams, gameData, i) {
 
     doc.teams = teams;
 
-    const id = doc.game_pk.toString() + doc.event_idx.toString();
-    events.push({
-      index: {
-        index,
-        type,
-        id,
-      },
-    });
+    doc.id = doc.game_pk.toString() + doc.event_idx.toString();
     events.push(doc);
     eventIdx += 1;
   }
@@ -174,14 +163,7 @@ function constructDocs(totals, opponentTotals, teams, gameData, i) {
     });
     doc.teams = teams;
 
-    const id = doc.game_pk.toString() + doc.event_idx.toString();
-    events.push({
-      index: {
-        index,
-        type,
-        id,
-      },
-    });
+    doc.id = doc.game_pk.toString() + doc.event_idx.toString();
     events.push(doc);
   }
 
@@ -210,14 +192,7 @@ function constructDocs(totals, opponentTotals, teams, gameData, i) {
 
     doc.teams = teams;
 
-    const id = doc.game_pk.toString() + doc.event_idx.toString();
-    events.push({
-      index: {
-        index,
-        type,
-        id,
-      },
-    });
+    doc.id = doc.game_pk.toString() + doc.event_idx.toString();
     events.push(doc);
     eventIdx += 1;
   }
@@ -239,14 +214,8 @@ function constructDocs(totals, opponentTotals, teams, gameData, i) {
 
     doc.teams = teams;
 
-    const id = doc.game_pk.toString() + doc.event_idx.toString();
-    events.push({
-      index: {
-        index,
-        type,
-        id,
-      },
-    });
+    doc.id = doc.game_pk.toString() + doc.event_idx.toString();
+    events.push(doc);
     eventIdx += 1;
   }
 
@@ -267,14 +236,7 @@ function constructDocs(totals, opponentTotals, teams, gameData, i) {
 
     doc.teams = teams;
 
-    const id = doc.game_pk.toString() + doc.event_idx.toString();
-    events.push({
-      index: {
-        index,
-        type,
-        id,
-      },
-    });
+    doc.id = doc.game_pk.toString() + doc.event_idx.toString();
     events.push(doc);
     eventIdx += 1;
   }
@@ -282,13 +244,11 @@ function constructDocs(totals, opponentTotals, teams, gameData, i) {
   return events;
 }
 
-module.exports = function parseBoxScore(gamePk, gameEvents) {
+module.exports = function constructLivePlays(gamePk, gameEvents) {
   const gameData = {
     game_pk: gamePk,
-    gametype: gameEvents.data.gameData.game.type,
+    game_type: gameEvents.data.gameData.game.type,
     game_season: gameEvents.data.gameData.game.season,
-    game_start_date: gameEvents.data.gameData.datetime.dateTime,
-    game_end_date: gameEvents.data.gameData.datetime.endDateTime,
     venue: gameEvents.data.gameData.venue.name,
     date_time: gameEvents.data.gameData.datetime.dateTime,
   };

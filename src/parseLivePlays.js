@@ -1,17 +1,12 @@
 const moment = require('moment');
 
-const index = 'events2';
-const type = 'event';
-
 module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts) {
   const events = [];
 
   const gameData = {
     game_pk: gamePk,
-    gametype: gameEvents.data.gameData.game.type,
+    game_type: gameEvents.data.gameData.game.type,
     game_season: gameEvents.data.gameData.game.season,
-    game_start_date: gameEvents.data.gameData.datetime.dateTime,
-    game_end_date: gameEvents.data.gameData.datetime.endDateTime,
     venue: gameEvents.data.gameData.venue.name,
   };
 
@@ -19,25 +14,31 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts) {
     const doc = { ...gameData };
 
     // Results
-    doc.eventtype_id = play.result.eventTypeId;
+    doc.event_type_id = play.result.eventTypeId;
     doc.event_code = play.result.eventCode;
     doc.event = play.result.event;
-    doc.game_winning_goal = play.result.gameWinningGoal;
+    if (play.result.gameWinningGoal !== undefined) {
+      doc.game_winning_goal = play.result.gameWinningGoal;
+    }
     if (play.result.strength !== undefined) {
       doc.strength = play.result.strength.code;
     }
+
     // About
     doc.event_idx = play.about.eventIdx;
     doc.event_id = play.about.eventId;
     doc.period = play.about.period;
-    doc.periodtype = play.about.periodType;
+    doc.period_type = play.about.periodType;
     doc.ordinal_num = play.about.ordinalNum;
     doc.period_time = play.about.periodTime;
     doc.period_time_remaining = play.about.periodTimeRemaining;
     doc.date_time = play.about.dateTime;
+
     // Coordinates
-    doc.x = play.coordinates.x;
-    doc.y = play.coordinates.y;
+    if (play.coordinates !== undefined) {
+      doc.x = play.coordinates.x;
+      doc.y = play.coordinates.y;
+    }
 
     const teams = [];
     if (play.team !== undefined) {
@@ -81,7 +82,16 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts) {
       // Two scenarios:
       // 1) the time of the event is 00:00 so we want to include those who started there shift at this time
       // 2) the time of the event is something else so we don't want to include those who started there shift at this time because for instance a goal was scored, the event is already over and a new unit has come out to play
-      if (!playerAlreadyAdded && gameShift.period === play.about.period && ((playTime > startTime && playTime <= endTime) || (moment('00:00', 'mm:ss').isSame(playTime) && playTime >= startTime && playTime <= endTime))) {
+      if (!playerAlreadyAdded
+        && gameShift.period === play.about.period
+        && (playTime > startTime && playTime <= endTime)) {
+        players.push({
+          id: gameShift.playerId,
+          type: 'OnIce',
+        });
+      } else if (!playerAlreadyAdded
+        && gameShift.period === play.about.period
+        && (moment('00:00', 'mm:ss').isSame(playTime) && playTime.isSame(startTime))) {
         players.push({
           id: gameShift.playerId,
           type: 'OnIce',
@@ -90,14 +100,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts) {
     });
     doc.players = players;
 
-    const id = doc.game_pk.toString() + doc.event_idx.toString();
-    events.push({
-      index: {
-        index,
-        type,
-        id,
-      },
-    });
+    doc.id = doc.game_pk.toString() + doc.event_idx.toString();
     events.push(doc);
   });
 
