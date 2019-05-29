@@ -1,12 +1,19 @@
 {
   "name": "stat-buddy-crawler",
   "version": "1.0.0",
-  "description": "",
+  "description": "Serverless Lambda Crawler for the NHL APIs",
   "main": "handler.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "serverless invoke -f crawl -l",
+    "start:dev": "serverless invoke local --function crawl",
+    "deploy": "serverless deploy -v",
+    "deploy:f": "serverless deploy function -f crawl",
+    "lint": "eslint ./src",
+    "test": "jest --coverage",
+    "test:watch": "jest --watchAll",
+    "commit": "npm run lint && npm run test"
   },
-  "author": "",
+  "author": "Evan Fleming",
   "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.462.0",
@@ -17,6 +24,12 @@
     "request": "^2.88.0"
   },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.3",
+    "jest": "^24.8.0",
     "serverless-dynamodb-local": "^0.2.37",
     "serverless-offline": "^3.8.3"
   }

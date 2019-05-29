@@ -32,7 +32,7 @@ provider:
 
 functions:
   crawl:
-    handler: handler.crawl
+    handler: src/handler.crawl
     events:
       - schedule: cron(0/5 * * * ? *)
 
