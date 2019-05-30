@@ -56,7 +56,7 @@ module.exports.crawl = async () => {
 
           // Log some of the data
           for (let i = 0; i < events.length; i += 1) {
-            console.log(events[i].players.length);
+            console.log(events[i]);
           }
         }
       }
