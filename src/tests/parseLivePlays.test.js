@@ -80,9 +80,7 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.event_type_id).toEqual(result.eventTypeId);
     expect(doc.game_winning_goal).toEqual(undefined);
     expect(doc.strength).toEqual(undefined);
-    expect(doc.period).toEqual(about.period);
-    expect(doc.period_type).toEqual(about.periodType);
-    expect(doc.period_time).toEqual(about.periodTime);
+    expect(doc.play_time).toEqual(1356);
     expect(doc.date_time).toEqual(about.dateTime);
     expect(doc.x).toEqual(undefined);
     expect(doc.y).toEqual(undefined);
@@ -91,7 +89,7 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.team_status).toEqual('AWAY');
   });
 
-  test.each(['HOME'], ['AWAY'])('Should team status', (status) => {
+  test.each([['HOME'], ['AWAY']])('Should check team status', (status) => {
     const gameData = gameEvents.data.gameData;
     const teamId = status === 'HOME' ? homeTeamId : awayTeamId;
     const result = {
@@ -103,7 +101,7 @@ describe('Test the parseLivePlays Method', () => {
       secondaryType: 'Wrist Shot',
     };
     const about = {
-      period: 2,
+      period: 1,
       periodType: 'regular',
       ordinalNum: 'second',
       periodTime: '02:36',
@@ -135,9 +133,7 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.game_winning_goal).toEqual(true);
     expect(doc.strength).toEqual('EVEN');
     expect(doc.secondary_type).toEqual('Wrist Shot');
-    expect(doc.period).toEqual(about.period);
-    expect(doc.period_type).toEqual(about.periodType);
-    expect(doc.period_time).toEqual(about.periodTime);
+    expect(doc.play_time).toEqual(156);
     expect(doc.date_time).toEqual(about.dateTime);
     expect(doc.x).toEqual(x);
     expect(doc.y).toEqual(y);
@@ -146,25 +142,26 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.team_status).toEqual(status);
   });
 
-  test.each(
-    ['HOME', 'HIT', 'HITTEE', 'AWAY'],
-    ['HOME', 'BLOCKED_SHOT', 'SHOT_BLOCKED', 'AWAY'],
-    ['HOME', 'SHOT', 'SAVE', 'AWAY'],
-    ['HOME', 'FACEOFF', 'FACEOFF_LOSS', 'AWAY'],
-    ['HOME', 'GOAL', 'GOAL_ALLOWED', 'AWAY'],
-    ['HOME', 'GOAL', 'ASSIST', 'HOME'],
-    ['AWAY', 'HIT', 'HITTEE', 'AWAY'],
-    ['AWAY', 'BLOCKED_SHOT', 'SHOT_BLOCKED', 'AWAY'],
-    ['AWAY', 'SHOT', 'SAVE', 'AWAY'],
-    ['AWAY', 'FACEOFF', 'FACEOFF_LOSS', 'AWAY'],
-    ['AWAY', 'GOAL', 'GOAL_ALLOWED', 'AWAY'],
-    ['AWAY', 'GOAL', 'ASSIST', 'AWAY'],
-  )('Should handle play with player data', (teamStatus, eventTypeId, secondEventTypeId, secondTeamStatus) => {
+  test.each([
+    ['HOME', 'HIT', 'HITTEE', 'AWAY', 'Forward'],
+    ['HOME', 'BLOCKED_SHOT', 'SHOT_BLOCKED', 'AWAY', 'Forward'],
+    ['HOME', 'SHOT', 'SAVE', 'AWAY', 'Forward'],
+    ['HOME', 'FACEOFF', 'FACEOFF_LOSS', 'AWAY', 'Forward'],
+    ['HOME', 'GOAL', 'ASSIST', 'HOME', 'Forward'],
+    ['HOME', 'GOAL', 'GOAL_ALLOWED', 'AWAY', 'Goalie'],
+    ['AWAY', 'HIT', 'HITTEE', 'HOME', 'Forward'],
+    ['AWAY', 'BLOCKED_SHOT', 'SHOT_BLOCKED', 'HOME', 'Forward'],
+    ['AWAY', 'SHOT', 'SAVE', 'HOME', 'Forward'],
+    ['AWAY', 'FACEOFF', 'FACEOFF_LOSS', 'HOME', 'Forward'],
+    ['AWAY', 'GOAL', 'ASSIST', 'AWAY', 'Forward'],
+    ['AWAY', 'GOAL', 'GOAL_ALLOWED', 'HOME', 'Goalie'],
+  ])('Should handle play with player data', (teamStatus, eventTypeId, secondEventTypeId, secondTeamStatus, secondaryPlayerType) => {
     const player1 = 666;
     const player2 = 555;
-    const players = {};
     const teamId = teamStatus === 'HOME' ? homeTeamId : awayTeamId;
-    const secondTeamId = secondTeamStatus === 'HOME' ? awayTeamId : homeTeamId;
+    const secondTeamId = secondTeamStatus === 'HOME' ? homeTeamId : awayTeamId;
+    
+    const players = {};
     players[`ID${player1}`] = {
       shootsCatches: 'L',
     };
@@ -173,18 +170,16 @@ describe('Test the parseLivePlays Method', () => {
     };
     gameEvents.data.gameData.players = players;
 
-    const result = {
-      eventTypeId,
-    };
-    const about = {
-      period: 2,
-      periodType: 'regular',
-      periodTime: '02:36',
-      dateTime: '2018-01-01T18:46:36.233Z',
-    };
     gameEvents.data.liveData.plays.allPlays = [{
-      result,
-      about,
+      result: {
+        eventTypeId,
+      },
+      about: {
+        period: 2,
+        periodType: 'regular',
+        periodTime: '02:36',
+        dateTime: '2018-01-01T18:46:36.233Z',
+      },
       coordinates: {},
       team: {
         id: teamId,
@@ -199,25 +194,28 @@ describe('Test the parseLivePlays Method', () => {
           player: {
             id: player2,
           },
+          playerType: secondaryPlayerType
         },
       ],
     }];
+    
     const events = parseLivePlays(gamePk, gameEvents, gameShifts);
+    
     expect(events.length).toEqual(2);
 
     let doc = events[0];
-    expect(doc.player_id).toEqual(player1);
-    expect(doc.handedness).toEqual('L');
-    expect(doc.team_id).toEqual(teamId);
-    expect(doc.team_status).toEqual(teamStatus);
-    expect(doc.event_type_id).toEqual(eventTypeId);
-
-    doc = events[1];
     expect(doc.player_id).toEqual(player2);
     expect(doc.handedness).toEqual('R');
     expect(doc.team_id).toEqual(secondTeamId);
     expect(doc.team_status).toEqual(secondTeamStatus);
     expect(doc.event_type_id).toEqual(secondEventTypeId);
+
+    doc = events[1];
+    expect(doc.player_id).toEqual(player1);
+    expect(doc.handedness).toEqual('L');
+    expect(doc.team_id).toEqual(teamId);
+    expect(doc.team_status).toEqual(teamStatus);
+    expect(doc.event_type_id).toEqual(eventTypeId);
   });
 
   test('Should find players that were on the ice', () => {
@@ -228,37 +226,20 @@ describe('Test the parseLivePlays Method', () => {
     };
     gameEvents.data.gameData.players = players;
 
-    const result = {
-      eventTypeId: 'kappa',
-      eventCode: 'code kappa',
-      event: 'also kappa',
-      gameWinningGoal: true,
-      strength: {
-        code: 'EVEN',
-      },
-    };
-    const about = {
-      eventIdx: 123,
-      eventId: 1,
-      period: 2,
-      periodType: 'regular',
-      ordinalNum: 'second',
-      periodTime: '02:36',
-      periodTimeRemaining: '18:24',
-      dateTime: '2018-01-01T18:46:36.233Z',
-      goals: {
-        home: 5,
-        away: 6,
-      },
-    };
     gameEvents.data.liveData.plays.allPlays = [{
-      result,
-      about,
+      result: {
+        eventTypeId: 'kappa',
+      },
+      about: {
+        period: 2,
+        periodType: 'regular',
+        periodTime: '02:36',
+        dateTime: '2018-01-01T18:46:36.233Z',
+      },
       players: [{
         player: {
           id: player1,
         },
-        playerType: 'Forward',
       }],
     }];
 
@@ -310,18 +291,13 @@ describe('Test the parseLivePlays Method', () => {
     expect(events.length).toEqual(1);
 
     const doc = events[0];
-    expect(doc.id).toEqual(gamePk.toString() + about.eventIdx.toString());
-
     expect(doc.players.length).toEqual(2);
 
-    let player = doc.players[0];
-    expect(player.id).toEqual(player1);
-    expect(player.type).toEqual('Forward');
-    expect(player.handedness).toEqual('L');
+    let playerId = doc.players[0];
+    expect(playerId).toEqual(player1);
 
-    player = doc.players[1];
-    expect(player.id).toEqual(newPlayer1);
-    expect(player.type).toEqual('OnIce');
+    playerId = doc.players[1];
+    expect(playerId).toEqual(newPlayer1);
   });
 
   test('Should include players for game start', () => {
@@ -332,37 +308,20 @@ describe('Test the parseLivePlays Method', () => {
     };
     gameEvents.data.gameData.players = players;
 
-    const result = {
-      eventTypeId: 'kappa',
-      eventCode: 'code kappa',
-      event: 'also kappa',
-      gameWinningGoal: true,
-      strength: {
-        code: 'EVEN',
-      },
-    };
-    const about = {
-      eventIdx: 123,
-      eventId: 1,
-      period: 1,
-      periodType: 'regular',
-      ordinalNum: 'second',
-      periodTime: '00:00',
-      periodTimeRemaining: '18:24',
-      dateTime: '2018-01-01T18:46:36.233Z',
-      goals: {
-        home: 5,
-        away: 6,
-      },
-    };
     gameEvents.data.liveData.plays.allPlays = [{
-      result,
-      about,
+      result: {
+        eventTypeId: 'kappa',
+      },
+      about: {
+        period: 1,
+        periodType: 'regular',
+        periodTime: '00:00',
+        dateTime: '2018-01-01T18:46:36.233Z',
+      },
       players: [{
         player: {
           id: player1,
         },
-        playerType: 'Forward',
       }],
     }];
 
@@ -392,17 +351,8 @@ describe('Test the parseLivePlays Method', () => {
     expect(events.length).toEqual(1);
 
     const doc = events[0];
-    expect(doc.id).toEqual(gamePk.toString() + about.eventIdx.toString());
-
     expect(doc.players.length).toEqual(2);
-
-    let player = doc.players[0];
-    expect(player.id).toEqual(player1);
-    expect(player.type).toEqual('Forward');
-    expect(player.handedness).toEqual('L');
-
-    player = doc.players[1];
-    expect(player.id).toEqual(newPlayer1);
-    expect(player.type).toEqual('OnIce');
+    expect(doc.players[0]).toEqual(player1);
+    expect(doc.players[1]).toEqual(newPlayer1);
   });
 });

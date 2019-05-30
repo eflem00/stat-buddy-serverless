@@ -53,11 +53,12 @@ module.exports.crawl = async () => {
           } else {
             events = constructLivePlays(gamePk, gameEvents);
           }
-
+          console.log(events);
           // Log some of the data
-          for (let i = 0; i < events.length; i += 1) {
-            console.log(events[i]);
-          }
+          // for (let i = 0; i < events.length; i += 1) {
+          //   if(events[i].players !== undefined && events[i].players.length === 0)
+          //     console.log(events[i]);
+          // }
         }
       }
     }
