@@ -5,23 +5,22 @@ const parseLivePlays = require('./parseLivePlays');
 const constructLivePlays = require('./constructLivePlays');
 
 aws.config.update({ region: process.env.REGION });
-// const ddb = new aws.DynamoDB.DocumentClient();
+const ddb = new aws.DynamoDB.DocumentClient();
 
 module.exports.crawl = async () => {
   try {
     // Get the start index
-    // const response = await ddb.get({
-    //   TableName : process.env.DYNAMODB_TABLE,
-    //   Key: {
-    //     id: process.env.START_INDEX_ID
-    //   }
-    // }).promise();
-    // const startIndex = response.Item.startIndex ? moment(response.Item.startIndex) : moment('2010-10-07');
-    // const badGames = response.Item.badGames ? response.Item.badGames : [];
-    // const bulkErrors = response.Item.bulkErrors ? response.Item.bulkErrors : [];
+    const response = await ddb.get({
+      TableName: process.env.START_INDEX_TABLE,
+      Key: {
+        id: process.env.START_INDEX_ID,
+      },
+    }).promise();
+    const startIndex = response.Item.startIndex ? moment(response.Item.startIndex) : moment('2010-10-07');
+    const badGames = response.Item.badGames ? response.Item.badGames : [];
 
-    const startIndex = moment('2018-02-23'); // This one has an empty plays array
-    const badGames = [];
+    // const startIndex = moment('2018-02-23'); // This one has an empty plays array
+    // const badGames = [];
 
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
@@ -53,25 +52,33 @@ module.exports.crawl = async () => {
           } else {
             events = constructLivePlays(gamePk, gameEvents);
           }
-          console.log(events);
-          // Log some of the data
-          // for (let i = 0; i < events.length; i += 1) {
-          //   if(events[i].players !== undefined && events[i].players.length === 0)
-          //     console.log(events[i]);
-          // }
+
+          // TODO
+          const batch = events.map((event) => {
+            return {
+              PutRequest: {
+                Item: event,
+              },
+            };
+          });
+          await ddb.batchWrite({
+            RequestItems: {
+              events: batch,
+            },
+          }).promise();
         }
       }
     }
 
     // Increment and save the new startIndex
-    // await ddb.put({
-    //   TableName : process.env.DYNAMODB_TABLE,
-    //   Item: {
-    //      id: process.env.START_INDEX_ID,
-    //      startIndex: startIndex.add(1, 'days').format('YYYY-MM-DD'),
-    //      badGames,
-    //   }
-    // }).promise();
+    await ddb.put({
+      TableName: process.env.START_INDEX_TABLE,
+      Item: {
+        id: process.env.START_INDEX_ID,
+        startIndex: startIndex.add(1, 'days').format('YYYY-MM-DD'),
+        badGames,
+      },
+    }).promise();
 
     console.log('Finished crawling for date: ', startIndex.format('YYYY-MM-DD'));
   } catch (ex) {

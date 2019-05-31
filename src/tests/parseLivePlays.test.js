@@ -3,6 +3,8 @@ const parseLivePlays = require('../parseLivePlays');
 let gamePk;
 let gameEvents;
 let gameShifts;
+let awayTeamId;
+let homeTeamId;
 
 describe('Test the parseLivePlays Method', () => {
   beforeEach(() => {
@@ -24,10 +26,15 @@ describe('Test the parseLivePlays Method', () => {
           },
           teams: {
             away: {
-              id: awayTeamId
+              id: awayTeamId,
             },
             home: {
-              id: homeTeamId
+              id: homeTeamId,
+            },
+          },
+          players: {
+            'ID1': {
+              shootsCatches: 'L',
             },
           },
         },
@@ -45,7 +52,8 @@ describe('Test the parseLivePlays Method', () => {
     };
   });
 
-  test('Should return succesfully with empty plays', () => {
+  test.each([[undefined], [[]]])('Should return succesfully with empty plays', (players) => {
+    gameEvents.data.liveData.plays.allPlays.push({ players });
     expect(() => parseLivePlays(gamePk, gameEvents, gameShifts)).not.toThrow();
   });
 
@@ -62,12 +70,18 @@ describe('Test the parseLivePlays Method', () => {
       dateTime: '2018-01-01T18:46:36.233Z',
     };
     const team = {
-      id: awayTeamId
-    }
+      id: awayTeamId,
+    };
+    const players = [{
+      player: {
+        id: '1',
+      },
+    }];
     gameEvents.data.liveData.plays.allPlays = [{
       result,
       about,
-      team
+      team,
+      players,
     }];
     const events = parseLivePlays(gamePk, gameEvents, gameShifts);
     expect(events.length).toEqual(1);
@@ -96,7 +110,7 @@ describe('Test the parseLivePlays Method', () => {
       eventTypeId: 'SHOT',
       gameWinningGoal: true,
       strength: {
-        code: 'EVEN'
+        code: 'EVEN',
       },
       secondaryType: 'Wrist Shot',
     };
@@ -109,9 +123,14 @@ describe('Test the parseLivePlays Method', () => {
     };
     const team = {
       id: teamId,
-    }
+    };
     const x = 10;
-    const y = -3
+    const y = -3;
+    const players = [{
+      player: {
+        id: '1',
+      },
+    }];
     gameEvents.data.liveData.plays.allPlays = [{
       result,
       about,
@@ -120,6 +139,7 @@ describe('Test the parseLivePlays Method', () => {
         x,
         y,
       },
+      players,
     }];
     const events = parseLivePlays(gamePk, gameEvents, gameShifts);
     expect(events.length).toEqual(1);
@@ -155,12 +175,14 @@ describe('Test the parseLivePlays Method', () => {
     ['AWAY', 'FACEOFF', 'FACEOFF_LOSS', 'HOME', 'Forward'],
     ['AWAY', 'GOAL', 'ASSIST', 'AWAY', 'Forward'],
     ['AWAY', 'GOAL', 'GOAL_ALLOWED', 'HOME', 'Goalie'],
+    ['AWAY', 'KAPPA', 'UNKNOWN', 'HOME', 'Goalie'],
+    ['HOME', 'KAPPA', 'UNKNOWN', 'AWAY', 'Goalie'],
   ])('Should handle play with player data', (teamStatus, eventTypeId, secondEventTypeId, secondTeamStatus, secondaryPlayerType) => {
     const player1 = 666;
     const player2 = 555;
     const teamId = teamStatus === 'HOME' ? homeTeamId : awayTeamId;
     const secondTeamId = secondTeamStatus === 'HOME' ? homeTeamId : awayTeamId;
-    
+
     const players = {};
     players[`ID${player1}`] = {
       shootsCatches: 'L',
@@ -194,13 +216,13 @@ describe('Test the parseLivePlays Method', () => {
           player: {
             id: player2,
           },
-          playerType: secondaryPlayerType
+          playerType: secondaryPlayerType,
         },
       ],
     }];
-    
+
     const events = parseLivePlays(gamePk, gameEvents, gameShifts);
-    
+
     expect(events.length).toEqual(2);
 
     let doc = events[0];
@@ -302,8 +324,13 @@ describe('Test the parseLivePlays Method', () => {
 
   test('Should include players for game start', () => {
     const player1 = 666;
+    const notInPlayerId1 = 666;
+    const newPlayer1 = 1337;
     const players = {};
     players[`ID${player1}`] = {
+      shootsCatches: 'L',
+    };
+    players[`ID${newPlayer1}`] = {
       shootsCatches: 'L',
     };
     gameEvents.data.gameData.players = players;
@@ -323,10 +350,24 @@ describe('Test the parseLivePlays Method', () => {
           id: player1,
         },
       }],
+    },
+    {
+      result: {
+        eventTypeId: 'kappa2',
+      },
+      about: {
+        period: 1,
+        periodType: 'regular',
+        periodTime: '20:00',
+        dateTime: '2018-01-01T18:46:36.233Z',
+      },
+      players: [{
+        player: {
+          id: newPlayer1,
+        },
+      }],
     }];
 
-    const notInPlayerId1 = 666;
-    const newPlayer1 = 1337;
     gameShifts.data.data = [
       {
         startTime: '00:00',
@@ -346,13 +387,23 @@ describe('Test the parseLivePlays Method', () => {
         playerId: newPlayer1,
         period: 1,
       },
+      {
+        startTime: '18:55',
+        endTime: '20:00',
+        playerId: newPlayer1,
+        period: 1,
+      },
     ];
     const events = parseLivePlays(gamePk, gameEvents, gameShifts);
-    expect(events.length).toEqual(1);
+    expect(events.length).toEqual(2);
 
-    const doc = events[0];
+    let doc = events[0];
     expect(doc.players.length).toEqual(2);
     expect(doc.players[0]).toEqual(player1);
     expect(doc.players[1]).toEqual(newPlayer1);
+
+    doc = events[1];
+    expect(doc.players.length).toEqual(1);
+    expect(doc.players[0]).toEqual(newPlayer1);
   });
 });

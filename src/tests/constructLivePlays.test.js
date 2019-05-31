@@ -15,22 +15,20 @@ const gameEvents = {
       datetime: {
         dateTime: '2017-08-16T13:56:23.123Z',
       },
-      teams: {
-        away: {
-          id: '1',
-        },
-        home: {
-          id: '2',
-        },
-      },
     },
     liveData: {
       boxscore: {
         teams: {
           away: {
-            players: {}
+            team: {
+              id: '1',
+            },
+            players: {},
           },
           home: {
+            team: {
+              id: '2',
+            },
             players: {},
           },
         },
@@ -61,7 +59,7 @@ describe('Test the constructLivePlays', () => {
             faceOffWins: 7,
             faceoffTaken: 10,
             takeaways: 3,
-            giveaways: 4
+            giveaways: 4,
           },
         },
         position: {
@@ -74,7 +72,10 @@ describe('Test the constructLivePlays', () => {
           shootsCatches: 'R',
         },
         stats: {
-          skaterStats: {},
+          skaterStats: {
+            saves: 5,
+            shots: 7,
+          },
         },
         position: {
           code: 'G',
@@ -97,7 +98,7 @@ describe('Test the constructLivePlays', () => {
             faceOffWins: 3,
             faceoffTaken: 7,
             takeaways: 4,
-            giveaways: 3
+            giveaways: 3,
           },
         },
         position: {
@@ -110,8 +111,21 @@ describe('Test the constructLivePlays', () => {
           shootsCatches: 'R',
         },
         stats: {
-          skaterStats: {},
+          skaterStats: {
+            saves: 3,
+            shots: 4,
+          },
         },
+        position: {
+          code: 'G',
+        },
+      },
+      player3: {
+        person: {
+          id: '4',
+          shootsCatches: 'R',
+        },
+        stats: {},
         position: {
           code: 'G',
         },
@@ -130,31 +144,28 @@ describe('Test the constructLivePlays', () => {
     expect(event.venue).toEqual(gameEvents.data.gameData.venue.name);
     expect(event.date_time).toEqual(gameEvents.data.gameData.datetime.dateTime);
 
-    expect(events.filter(x => x.event_type_id === 'GOAL').length).toEqual(6);
-    expect(events.filter(x => x.event_type_id === 'SHOT').length).toEqual(12);
-    expect(events.filter(x => x.event_type_id === 'HIT').length).toEqual(6);
-    expect(events.filter(x => x.event_type_id === 'FACEOFF').length).toEqual(10);
-    expect(events.filter(x => x.event_type_id === 'TAKEAWAY').length).toEqual(7);
-    expect(events.filter(x => x.event_type_id === 'GIVEAWAY').length).toEqual(7);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'GOAL').length).toEqual(2);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'ASSIST').length).toEqual(4);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'SHOT').length).toEqual(5);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'BLOCKED_SHOT').length).toEqual(1);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'HIT').length).toEqual(2);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'FACEOFF').length).toEqual(7);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'FACEOFF_LOSS').length).toEqual(3);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'TAKEAWAY').length).toEqual(3);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'GIVEAWAY').length).toEqual(4);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'SAVE').length).toEqual(5);
+    expect(events.filter(x => x.team_id === '1' && x.event_type_id === 'GOAL_ALLOWED').length).toEqual(2);
 
-    let count = 0;
-    events.forEach((event) => {
-      event.players.forEach((player) => {
-        if (player.type === 'Assist') {
-          count += 1;
-        }
-      });
-    })
-    expect(count).toEqual(12);
-
-    count = 0;
-    events.forEach((event) => {
-      event.players.forEach((player) => {
-        if (player.type === 'Assist') {
-          count += 1;
-        }
-      });
-    })
-    expect(count).toEqual(12);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'GOAL').length).toEqual(4);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'ASSIST').length).toEqual(8);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'SHOT').length).toEqual(7);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'BLOCKED_SHOT').length).toEqual(2);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'HIT').length).toEqual(4);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'FACEOFF').length).toEqual(3);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'FACEOFF_LOSS').length).toEqual(4);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'TAKEAWAY').length).toEqual(4);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'GIVEAWAY').length).toEqual(3);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'SAVE').length).toEqual(3);
+    expect(events.filter(x => x.team_id === '2' && x.event_type_id === 'GOAL_ALLOWED').length).toEqual(1);
   });
 });

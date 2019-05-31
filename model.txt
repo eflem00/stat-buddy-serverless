@@ -32,6 +32,9 @@ players:[
   { id: 8476899 }
 ]
 
+strength:
+ EVEN
+ PPG
 
 event_type_id:
 
@@ -47,6 +50,8 @@ HIT
 HITTEE
 FACEOFF
 FACEOFF_LOSS
+TAKEAWAY
+GIVEAWAY
 STOP
 GAME_SCHEDULED
 PERIOD_READY
