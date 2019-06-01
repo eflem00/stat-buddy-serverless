@@ -31,6 +31,9 @@ module.exports.crawl = async () => {
         if (schedule.data.dates[0].games[index] !== undefined) {
           // Get the events for a given gamse
           const gamePk = schedule.data.dates[0].games[index].gamePk;
+
+          console.log(`Beginning game [${gamePk}]`);
+
           const gameEvents = await request(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/feed/live`);
           const gameShifts = await request(`http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=${gamePk}`);
 
@@ -53,19 +56,19 @@ module.exports.crawl = async () => {
             events = constructLivePlays(gamePk, gameEvents);
           }
 
-          // TODO
-          const batch = events.map((event) => {
-            return {
-              PutRequest: {
-                Item: event,
-              },
-            };
-          });
-          await ddb.batchWrite({
-            RequestItems: {
-              events: batch,
-            },
-          }).promise();
+          console.log(`Found [${events.length}] events for game [${gamePk}]`);
+
+          let promises = [];
+          for (let i = 0; i < events.length; i++) {
+            promises.push(ddb.put({
+              TableName: 'events',
+              Item: events[i],
+            }).promise());
+          }
+
+          await Promise.all(promises);
+          
+          console.log(`Finished game [${gamePk}]`);
         }
       }
     }
@@ -85,3 +88,40 @@ module.exports.crawl = async () => {
     console.log('Error Crawling APIs. Ex: ', ex);
   }
 };
+
+
+          // if (events.length > 0) {
+          //   let batch = [];
+          //   batch.push({
+          //     PutRequest: {
+          //       Item: events[0],
+          //     },
+          //   });
+          //   const params = {
+          //     RequestItems: {
+          //       'events': batch,
+          //     },
+          //   };
+          //   ddb.batchWrite(params, (err, data) => {
+          //     if (err) console.log(err);
+          //     else console.log(data);
+          //   });
+          // }
+
+          // for (let i = 0; i < events.length; i += 1) {
+          //   let batch = [];
+          //   batch.push({
+          //     PutRequest: {
+          //       Item: events[i],
+          //     },
+          //   });
+          //   if (batch.length === 25) {
+          //     const params = {
+          //       RequestItems: {
+          //         'events': [...batch],
+          //       },
+          //     };
+          //     await ddb.batchWrite(params).promise();
+          //     batch = [];
+          //   }
+          // }

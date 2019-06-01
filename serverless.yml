@@ -9,7 +9,6 @@ provider:
   environment:
     START_INDEX_TABLE: ${self:service}-${self:provider.stage}
     START_INDEX_ID: "CrawlerIndex"
-    ES_URL: "https://search-stat-buddy-es-xt44xcxdvppcdg4dgsspz7lh5q.us-west-2.es.amazonaws.com/"
     REGION: ${self:provider.region}
   iamRoleStatements:
     - Effect: Allow
@@ -29,6 +28,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
+        - dynamodb:BatchWriteItem
       Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/events"
 
 functions:
