@@ -46,7 +46,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       const awayTeamId = gameEvents.data.gameData.teams.away.id;
       const playIsHome = doc.team_status === 'HOME';
 
-      // TODO: Could be offsetting penalties
+      // TODO: Could be offsetting penalties?
       doc.penalties_for = 0;
       doc.penalties_against = 0;
       gamePenalties.forEach((penalty) => {
