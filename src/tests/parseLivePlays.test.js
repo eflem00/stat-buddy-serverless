@@ -175,14 +175,14 @@ describe('Test the parseLivePlays Method', () => {
     ['HOME', 'BLOCKED_SHOT', 'SHOT_BLOCKED', 'AWAY', 'Forward'],
     ['HOME', 'SHOT', 'SAVE', 'AWAY', 'Forward'],
     ['HOME', 'FACEOFF', 'FACEOFF_LOSS', 'AWAY', 'Forward'],
-    ['HOME', 'PENALTY', 'PENALTY_ON', 'AWAY', 'Forward'],
+    ['HOME', 'PENALTY', 'PENALTY_DRAWN', 'AWAY', 'Forward'],
     ['HOME', 'GOAL', 'ASSIST', 'HOME', 'Forward'],
     ['HOME', 'GOAL', 'GOAL_ALLOWED', 'AWAY', 'Goalie'],
     ['AWAY', 'HIT', 'HITTEE', 'HOME', 'Forward'],
     ['AWAY', 'BLOCKED_SHOT', 'SHOT_BLOCKED', 'HOME', 'Forward'],
     ['AWAY', 'SHOT', 'SAVE', 'HOME', 'Forward'],
     ['AWAY', 'FACEOFF', 'FACEOFF_LOSS', 'HOME', 'Forward'],
-    ['AWAY', 'PENALTY', 'PENALTY_ON', 'HOME', 'Forward'],
+    ['AWAY', 'PENALTY', 'PENALTY_DRAWN', 'HOME', 'Forward'],
     ['AWAY', 'GOAL', 'ASSIST', 'AWAY', 'Forward'],
     ['AWAY', 'GOAL', 'GOAL_ALLOWED', 'HOME', 'Goalie'],
   ])('Should handle play with player data', (teamStatus, eventTypeId, secondEventTypeId, secondTeamStatus, secondaryPlayerType) => {
@@ -424,7 +424,7 @@ describe('Test the parseLivePlays Method', () => {
         about: {
           period: 1,
           periodType: 'regular',
-          periodTime: '02:31',
+          periodTime: '02:30',
         },
         team: {
           id: 2,
@@ -442,7 +442,7 @@ describe('Test the parseLivePlays Method', () => {
         about: {
           period: 1,
           periodType: 'regular',
-          periodTime: '04:29',
+          periodTime: '04:30',
         },
         team: {
           id: 1,
@@ -460,7 +460,7 @@ describe('Test the parseLivePlays Method', () => {
         about: {
           period: 1,
           periodType: 'regular',
-          periodTime: '02:30',
+          periodTime: '02:29',
         },
         team: {
           id: 2,
@@ -478,7 +478,7 @@ describe('Test the parseLivePlays Method', () => {
         about: {
           period: 1,
           periodType: 'regular',
-          periodTime: '04:30',
+          periodTime: '04:31',
         },
         team: {
           id: 2,

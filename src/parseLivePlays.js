@@ -50,7 +50,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       doc.penalties_for = 0;
       doc.penalties_against = 0;
       gamePenalties.forEach((penalty) => {
-        if (doc.play_time > penalty.startTime && doc.play_time < penalty.endTime) {
+        if (doc.play_time >= penalty.startTime && doc.play_time <= penalty.endTime) {
           if (penalty.teamId === doc.team_id) {
             doc.penalties_for += 1;
           } else {
@@ -111,7 +111,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
               events.push(newDoc);
               break;
             case 'PENALTY':
-              newDoc.event_type_id = 'PENALTY_ON';
+              newDoc.event_type_id = 'PENALTY_DRAWN';
               newDoc.team_id = playIsHome ? awayTeamId : homeTeamId;
               newDoc.team_status = playIsHome ? 'AWAY' : 'HOME';
               events.push(newDoc);
