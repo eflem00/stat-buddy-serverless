@@ -1,4 +1,5 @@
 const parseLivePlays = require('../parseLivePlays');
+const constants = require('../constants');
 
 let gamePk;
 let gameEvents;
@@ -89,33 +90,30 @@ describe('Test the parseLivePlays Method', () => {
     expect(events.length).toEqual(1);
 
     const doc = events[0];
-    expect(doc.game_pk).toEqual(gamePk);
-    expect(doc.game_type).toEqual(gameData.game.type);
-    expect(doc.game_season).toEqual(gameData.game.season);
+    expect(doc.gamePk).toEqual(gamePk);
+    expect(doc.gameType).toEqual(gameData.game.type);
+    expect(doc.gameSeason).toEqual(gameData.game.season);
     expect(doc.venue).toEqual(gameData.venue.name);
-    expect(doc.event_type_id).toEqual(result.eventTypeId);
-    expect(doc.game_winning_goal).toEqual(undefined);
-    expect(doc.strength).toEqual(undefined);
-    expect(doc.penalty_severity).toEqual(undefined);
-    expect(doc.penalty_minutes).toEqual(undefined);
-    expect(doc.play_time).toEqual(1356);
-    expect(doc.date_time).toEqual(about.dateTime);
+    expect(doc.eventTypeId).toEqual(result.eventTypeId);
+    expect(doc.gameWinningGoal).toEqual(undefined);
+    expect(doc.penaltySeverity).toEqual(undefined);
+    expect(doc.penaltyMinutes).toEqual(undefined);
+    expect(doc.secondaryType).toEqual(undefined);
+    expect(doc.playTime).toEqual(1356);
+    expect(doc.dateTime).toEqual(about.dateTime);
     expect(doc.x).toEqual(undefined);
     expect(doc.y).toEqual(undefined);
 
-    expect(doc.team_id).toEqual(awayTeamId);
-    expect(doc.team_status).toEqual('AWAY');
+    expect(doc.teamId).toEqual(awayTeamId);
+    expect(doc.teamStatus).toEqual(constants.Away);
   });
 
-  test.each([['HOME'], ['AWAY']])('Should check team status', (status) => {
+  test.each([[constants.Home], [constants.Away]])('Should check team status', (status) => {
     const gameData = gameEvents.data.gameData;
-    const teamId = status === 'HOME' ? homeTeamId : awayTeamId;
+    const teamId = status === constants.Home ? homeTeamId : awayTeamId;
     const result = {
-      eventTypeId: 'SHOT',
+      eventTypeId: constants.Shot,
       gameWinningGoal: true,
-      strength: {
-        code: 'EVEN',
-      },
       secondaryType: 'Wrist Shot',
       penaltySeverity: 'Major',
       penaltyMinutes: 4,
@@ -151,45 +149,44 @@ describe('Test the parseLivePlays Method', () => {
     expect(events.length).toEqual(1);
 
     const doc = events[0];
-    expect(doc.game_pk).toEqual(gamePk);
-    expect(doc.game_type).toEqual(gameData.game.type);
-    expect(doc.game_season).toEqual(gameData.game.season);
+    expect(doc.gamePk).toEqual(gamePk);
+    expect(doc.gameType).toEqual(gameData.game.type);
+    expect(doc.gameSeason).toEqual(gameData.game.season);
     expect(doc.venue).toEqual(gameData.venue.name);
-    expect(doc.event_type_id).toEqual(result.eventTypeId);
-    expect(doc.game_winning_goal).toEqual(true);
-    expect(doc.strength).toEqual('EVEN');
-    expect(doc.penalty_severity).toEqual('Major');
-    expect(doc.penalty_minutes).toEqual(4);
-    expect(doc.secondary_type).toEqual('Wrist Shot');
-    expect(doc.play_time).toEqual(156);
-    expect(doc.date_time).toEqual(about.dateTime);
+    expect(doc.eventTypeId).toEqual(result.eventTypeId);
+    expect(doc.gameWinningGoal).toEqual(true);
+    expect(doc.penaltySeverity).toEqual('Major');
+    expect(doc.penaltyMinutes).toEqual(4);
+    expect(doc.secondaryType).toEqual('Wrist Shot');
+    expect(doc.playTime).toEqual(156);
+    expect(doc.dateTime).toEqual(about.dateTime);
     expect(doc.x).toEqual(x);
     expect(doc.y).toEqual(y);
 
-    expect(doc.team_id).toEqual(teamId);
-    expect(doc.team_status).toEqual(status);
+    expect(doc.teamId).toEqual(teamId);
+    expect(doc.teamStatus).toEqual(status);
   });
 
   test.each([
-    ['HOME', 'HIT', 'HITTEE', 'AWAY', 'Forward'],
-    ['HOME', 'BLOCKED_SHOT', 'SHOT_BLOCKED', 'AWAY', 'Forward'],
-    ['HOME', 'SHOT', 'SAVE', 'AWAY', 'Forward'],
-    ['HOME', 'FACEOFF', 'FACEOFF_LOSS', 'AWAY', 'Forward'],
-    ['HOME', 'PENALTY', 'PENALTY_DRAWN', 'AWAY', 'Forward'],
-    ['HOME', 'GOAL', 'ASSIST', 'HOME', 'Forward'],
-    ['HOME', 'GOAL', 'GOAL_ALLOWED', 'AWAY', 'Goalie'],
-    ['AWAY', 'HIT', 'HITTEE', 'HOME', 'Forward'],
-    ['AWAY', 'BLOCKED_SHOT', 'SHOT_BLOCKED', 'HOME', 'Forward'],
-    ['AWAY', 'SHOT', 'SAVE', 'HOME', 'Forward'],
-    ['AWAY', 'FACEOFF', 'FACEOFF_LOSS', 'HOME', 'Forward'],
-    ['AWAY', 'PENALTY', 'PENALTY_DRAWN', 'HOME', 'Forward'],
-    ['AWAY', 'GOAL', 'ASSIST', 'AWAY', 'Forward'],
-    ['AWAY', 'GOAL', 'GOAL_ALLOWED', 'HOME', 'Goalie'],
+    [constants.Home, constants.Hit, constants.Hittee, constants.Away, 'Forward'],
+    [constants.Home, constants.BlockedShot, constants.ShotBlocked, constants.Away, 'Forward'],
+    [constants.Home, constants.Shot, constants.Save, constants.Away, 'Forward'],
+    [constants.Home, constants.Faceoff, constants.FaceoffLoss, constants.Away, 'Forward'],
+    [constants.Home, constants.Penalty, constants.PenaltyDrawn, constants.Away, 'Forward'],
+    [constants.Home, constants.Goal, constants.Assist, constants.Home, 'Forward'],
+    [constants.Home, constants.Goal, constants.GoalAllowed, constants.Away, constants.GoalieType],
+    [constants.Away, constants.Hit, constants.Hittee, constants.Home, 'Forward'],
+    [constants.Away, constants.BlockedShot, constants.ShotBlocked, constants.Home, 'Forward'],
+    [constants.Away, constants.Shot, constants.Save, constants.Home, 'Forward'],
+    [constants.Away, constants.Faceoff, constants.FaceoffLoss, constants.Home, 'Forward'],
+    [constants.Away, constants.Penalty, constants.PenaltyDrawn, constants.Home, 'Forward'],
+    [constants.Away, constants.Goal, constants.Assist, constants.Away, 'Forward'],
+    [constants.Away, constants.Goal, constants.GoalAllowed, constants.Home, constants.GoalieType],
   ])('Should handle play with player data', (teamStatus, eventTypeId, secondEventTypeId, secondTeamStatus, secondaryPlayerType) => {
     const player1 = 666;
     const player2 = 555;
-    const teamId = teamStatus === 'HOME' ? homeTeamId : awayTeamId;
-    const secondTeamId = secondTeamStatus === 'HOME' ? homeTeamId : awayTeamId;
+    const teamId = teamStatus === constants.Home ? homeTeamId : awayTeamId;
+    const secondTeamId = secondTeamStatus === constants.Home ? homeTeamId : awayTeamId;
 
     const players = {};
     players[`ID${player1}`] = {
@@ -234,18 +231,18 @@ describe('Test the parseLivePlays Method', () => {
     expect(events.length).toEqual(2);
 
     let doc = events[0];
-    expect(doc.player_id).toEqual(player2);
+    expect(doc.playerId).toEqual(player2);
     expect(doc.handedness).toEqual('R');
-    expect(doc.team_id).toEqual(secondTeamId);
-    expect(doc.team_status).toEqual(secondTeamStatus);
-    expect(doc.event_type_id).toEqual(secondEventTypeId);
+    expect(doc.teamId).toEqual(secondTeamId);
+    expect(doc.teamStatus).toEqual(secondTeamStatus);
+    expect(doc.eventTypeId).toEqual(secondEventTypeId);
 
     doc = events[1];
-    expect(doc.player_id).toEqual(player1);
+    expect(doc.playerId).toEqual(player1);
     expect(doc.handedness).toEqual('L');
-    expect(doc.team_id).toEqual(teamId);
-    expect(doc.team_status).toEqual(teamStatus);
-    expect(doc.event_type_id).toEqual(eventTypeId);
+    expect(doc.teamId).toEqual(teamId);
+    expect(doc.teamStatus).toEqual(teamStatus);
+    expect(doc.eventTypeId).toEqual(eventTypeId);
   });
 
   test('Should find players that were on the ice', () => {
@@ -507,20 +504,20 @@ describe('Test the parseLivePlays Method', () => {
     const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
     expect(events.length).toEqual(4);
 
-    let event = events.filter(x => x.event_type_id === 'in1')[0];
-    expect(event.penalties_for).toEqual(1);
-    expect(event.penalties_against).toEqual(1);
+    let event = events.filter(x => x.eventTypeId === 'in1')[0];
+    expect(event.penaltiesFor).toEqual(1);
+    expect(event.penaltiesAgainst).toEqual(1);
 
-    event = events.filter(x => x.event_type_id === 'in2')[0];
-    expect(event.penalties_for).toEqual(0);
-    expect(event.penalties_against).toEqual(1);
+    event = events.filter(x => x.eventTypeId === 'in2')[0];
+    expect(event.penaltiesFor).toEqual(0);
+    expect(event.penaltiesAgainst).toEqual(1);
 
-    event = events.filter(x => x.event_type_id === 'notin1')[0];
-    expect(event.penalties_for).toEqual(0);
-    expect(event.penalties_against).toEqual(1);
+    event = events.filter(x => x.eventTypeId === 'notin1')[0];
+    expect(event.penaltiesFor).toEqual(0);
+    expect(event.penaltiesAgainst).toEqual(1);
 
-    event = events.filter(x => x.event_type_id === 'notin2')[0];
-    expect(event.penalties_for).toEqual(0);
-    expect(event.penalties_against).toEqual(0);
+    event = events.filter(x => x.eventTypeId === 'notin2')[0];
+    expect(event.penaltiesFor).toEqual(0);
+    expect(event.penaltiesAgainst).toEqual(0);
   });
 });

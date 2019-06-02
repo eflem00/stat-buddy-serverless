@@ -1,146 +1,148 @@
-function parseBoxScore(players, gameData, team_id, team_status) {
+const constants = require('./constants');
+
+function parseBoxScore(players, gameData, teamId, teamStatus) {
   const events = [];
 
   Object.keys(players).forEach((key) => {
     const player = players[key];
-    const player_id = player.person.id;
+    const playerId = player.person.id;
     const handedness = player.person.shootsCatches;
     const playerStats = player.stats.skaterStats;
     if (playerStats === undefined) {
       return;
     }
-    if (player.position.code === 'G') {
+    if (player.position.type === constants.GoalieType) {
       for (let i = 0; i < playerStats.saves; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'SAVE';
+        doc.eventTypeId = constants.Save;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.shots - playerStats.saves; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'GOAL_ALLOWED';
+        doc.eventTypeId = constants.GoalAllowed;
         events.push(doc);
       }
     } else {
       for (let i = 0; i < playerStats.assists; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'ASSIST';
+        doc.eventTypeId = constants.Assist;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.goals; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'GOAL';
+        doc.eventTypeId = constants.Goal;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.shots; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'SHOT';
+        doc.eventTypeId = constants.Shot;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.hits; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'HIT';
+        doc.eventTypeId = constants.Hit;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.faceOffWins; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'FACEOFF';
+        doc.eventTypeId = constants.Faceoff;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.faceoffTaken - playerStats.faceOffWins; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'FACEOFF_LOSS';
+        doc.eventTypeId = constants.FaceoffLoss;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.takeaways; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'TAKEAWAY';
+        doc.eventTypeId = constants.Takeaway;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.giveaways; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'GIVEAWAY';
+        doc.eventTypeId = constants.Giveaway;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.blocked; i += 1) {
         const doc = {
           ...gameData,
-          team_id,
-          team_status,
-          player_id,
+          teamId,
+          teamStatus,
+          playerId,
         };
-        doc.player_id = player_id;
+        doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.event_type_id = 'BLOCKED_SHOT';
+        doc.eventTypeId = constants.BlockedShot;
         events.push(doc);
       }
     }
@@ -151,22 +153,22 @@ function parseBoxScore(players, gameData, team_id, team_status) {
 
 module.exports = function constructLivePlays(gamePk, gameEvents) {
   const gameData = {
-    game_pk: gamePk,
-    game_type: gameEvents.data.gameData.game.type,
-    game_season: gameEvents.data.gameData.game.season,
+    gamePk,
+    gameType: gameEvents.data.gameData.game.type,
+    gameSeason: gameEvents.data.gameData.game.season,
     venue: gameEvents.data.gameData.venue.name,
-    date_time: gameEvents.data.gameData.datetime.dateTime,
+    dateTime: gameEvents.data.gameData.datetime.dateTime,
   };
 
-  let team_id = gameEvents.data.liveData.boxscore.teams.away.team.id;
-  let team_status = 'AWAY';
+  let teamId = gameEvents.data.liveData.boxscore.teams.away.team.id;
+  let teamStatus = 'AWAY';
   let players = gameEvents.data.liveData.boxscore.teams.away.players;
-  const awayEvents = parseBoxScore(players, gameData, team_id, team_status);
+  const awayEvents = parseBoxScore(players, gameData, teamId, teamStatus);
 
-  team_id = gameEvents.data.liveData.boxscore.teams.home.team.id;
-  team_status = 'HOME';
+  teamId = gameEvents.data.liveData.boxscore.teams.home.team.id;
+  teamStatus = 'HOME';
   players = gameEvents.data.liveData.boxscore.teams.home.players;
-  const homeEvents = parseBoxScore(players, gameData, team_id, team_status);
+  const homeEvents = parseBoxScore(players, gameData, teamId, teamStatus);
 
   return [...awayEvents, ...homeEvents];
 };
