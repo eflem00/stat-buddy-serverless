@@ -7,8 +7,6 @@ provider:
   timeout: 280
   stage: prod
   environment:
-    START_INDEX_TABLE: ${self:service}-${self:provider.stage}
-    START_INDEX_ID: "CrawlerIndex"
     REGION: ${self:provider.region}
   iamRoleStatements:
     - Effect: Allow
@@ -19,7 +17,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.START_INDEX_TABLE}"
+      Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/Indexes"
     - Effect: Allow
       Action: 
         - dynamodb:Query
@@ -29,29 +27,10 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
         - dynamodb:BatchWriteItem
-      Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/events"
+      Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/Events"
 
 functions:
   crawl:
     handler: src/handler.crawl
     events:
       - schedule: cron(0/5 * * * ? *)
-
-resources:
-  Resources:
-    StatBuddyCrawlerDynamoDbTable:
-      Type: 'AWS::DynamoDB::Table'
-      DeletionPolicy: Retain
-      Properties:
-        AttributeDefinitions:
-          -
-            AttributeName: id
-            AttributeType: S
-        KeySchema:
-          -
-            AttributeName: id
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-        TableName: ${self:provider.environment.START_INDEX_TABLE}

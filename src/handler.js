@@ -4,6 +4,7 @@ const aws = require('aws-sdk');
 const parseLivePlays = require('./parseLivePlays');
 const constructLivePlays = require('./constructLivePlays');
 const parsePenalties = require('./parsePenalties');
+const constants = require('./constants');
 
 aws.config.update({ region: process.env.REGION });
 const ddb = new aws.DynamoDB.DocumentClient();
@@ -12,16 +13,14 @@ module.exports.crawl = async () => {
   try {
     // Get the start index
     const response = await ddb.get({
-      TableName: process.env.START_INDEX_TABLE,
+      TableName: constants.IndexesTable,
       Key: {
-        id: process.env.START_INDEX_ID,
+        id: constants.IndexId,
       },
     }).promise();
     const startIndex = response.Item.startIndex ? moment(response.Item.startIndex) : moment('2010-10-07');
-    const badGames = response.Item.badGames ? response.Item.badGames : [];
 
     // const startIndex = moment('2018-02-23'); // This one has an empty plays array
-    // const badGames = [];
 
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
@@ -30,11 +29,10 @@ module.exports.crawl = async () => {
     if (schedule.data.dates.length > 0) {
       for (const index in schedule.data.dates[0].games) {
         if (schedule.data.dates[0].games[index] !== undefined) {
-          // Get the events for a given gamse
-          const gamePk = schedule.data.dates[0].games[index].gamePk;
-
           console.log(`Beginning game [${gamePk}]`);
 
+          // Get fame data
+          const gamePk = schedule.data.dates[0].games[index].gamePk;
           const gameEvents = await request(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/feed/live`);
           const gameShifts = await request(`http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=${gamePk}`);
 
@@ -43,13 +41,6 @@ module.exports.crawl = async () => {
             throw new Error('Game state not final yet');
           }
 
-          // Some games are missing shifts...
-          if (gameShifts.data.data.length === 0) {
-            console.log(`No shift data found... [${gamePk}]`);
-            badGames.push(gamePk);
-          }
-
-          // Some games are missing plays...
           let events = [];
           if (gameEvents.data.liveData.plays.allPlays.length > 0) {
             const gamePenalties = parsePenalties(gameEvents);
@@ -58,12 +49,12 @@ module.exports.crawl = async () => {
             events = constructLivePlays(gamePk, gameEvents);
           }
 
-          console.log(`Found [${events.length}] events for game [${gamePk}]`);
+          console.log(`Writting [${events.length}] events to db`);
 
           const promises = [];
           for (let i = 0; i < events.length; i += 1) {
             promises.push(ddb.put({
-              TableName: 'events',
+              TableName: constants.EventsTable,
               Item: events[i],
             }).promise());
           }
@@ -76,16 +67,15 @@ module.exports.crawl = async () => {
 
     // Increment and save the new startIndex
     await ddb.put({
-      TableName: process.env.START_INDEX_TABLE,
+      TableName: constants.IndexesTable,
       Item: {
-        id: process.env.START_INDEX_ID,
+        id: constants.IndexId,
         startIndex: startIndex.add(1, 'days').format('YYYY-MM-DD'),
-        badGames,
       },
     }).promise();
 
     console.log('Finished crawling for date: ', startIndex.format('YYYY-MM-DD'));
   } catch (ex) {
-    console.log('Error Crawling APIs. Ex: ', ex);
+    console.log('Ex: ', ex);
   }
 };

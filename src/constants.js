@@ -17,4 +17,8 @@ module.exports = {
   Away: 'AWAY',
   Home: 'HOME',
   GoalieType: 'Goalie',
+  IndexesTable: 'Indexes',
+  IndexId: 'CrawlerIndex',
+  EventsTable: 'Events',
+  SummariesTable: 'Summaries',
 };
