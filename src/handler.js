@@ -29,10 +29,9 @@ module.exports.crawl = async () => {
     if (schedule.data.dates.length > 0) {
       for (const index in schedule.data.dates[0].games) {
         if (schedule.data.dates[0].games[index] !== undefined) {
+          const gamePk = schedule.data.dates[0].games[index].gamePk;
           console.log(`Beginning game [${gamePk}]`);
 
-          // Get fame data
-          const gamePk = schedule.data.dates[0].games[index].gamePk;
           const gameEvents = await request(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/feed/live`);
           const gameShifts = await request(`http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=${gamePk}`);
 
