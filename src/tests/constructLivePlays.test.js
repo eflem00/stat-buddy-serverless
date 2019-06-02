@@ -52,8 +52,8 @@ describe('Test the constructLivePlays', () => {
         },
         stats: {
           skaterStats: {
-            goals: 2,
-            assists: 4,
+            goals: 3,
+            assists: 5,
             shots: 5,
             blocked: 1,
             hits: 2,
@@ -61,10 +61,14 @@ describe('Test the constructLivePlays', () => {
             faceoffTaken: 10,
             takeaways: 3,
             giveaways: 4,
+            powerPlayGoals: 2,
+            shortHandedGoals: 1,
+            powerPlayAssists: 2,
+            shortHandedAssists: 3,
           },
         },
         position: {
-          code: 'F',
+          type: 'Forward',
         },
       },
       player2: {
@@ -74,8 +78,12 @@ describe('Test the constructLivePlays', () => {
         },
         stats: {
           skaterStats: {
-            saves: 5,
-            shots: 7,
+            powerPlaySaves: 2,
+            evenSaves: 1,
+            shortHandedSaves: 2,
+            evenShotsAgainst: 3,
+            powerPlayShotsAgainst: 2,
+            shortHandedShotsAgainst: 3,
           },
         },
         position: {
@@ -100,10 +108,14 @@ describe('Test the constructLivePlays', () => {
             faceoffTaken: 7,
             takeaways: 4,
             giveaways: 3,
+            powerPlayGoals: 2,
+            shortHandedGoals: 1,
+            powerPlayAssists: 4,
+            shortHandedAssists: 3,
           },
         },
         position: {
-          code: 'F',
+          type: 'Forward',
         },
       },
       player2: {
@@ -113,8 +125,12 @@ describe('Test the constructLivePlays', () => {
         },
         stats: {
           skaterStats: {
-            saves: 3,
-            shots: 4,
+            powerPlaySaves: 1,
+            evenSaves: 1,
+            shortHandedSaves: 1,
+            evenShotsAgainst: 2,
+            powerPlayShotsAgainst: 2,
+            shortHandedShotsAgainst: 1,
           },
         },
         position: {
@@ -145,8 +161,16 @@ describe('Test the constructLivePlays', () => {
     expect(event.venue).toEqual(gameEvents.data.gameData.venue.name);
     expect(event.dateTime).toEqual(gameEvents.data.gameData.datetime.dateTime);
 
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal).length).toEqual(2);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist).length).toEqual(4);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal).length).toEqual(3);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.penaltiesFor === 1 && x.penaltiesAgainst === 0).length).toEqual(1);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.penaltiesFor === 0 && x.penaltiesAgainst === 1).length).toEqual(2);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.penaltiesFor === 0 && x.penaltiesAgainst === 0).length).toEqual(0);
+
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist).length).toEqual(5);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.penaltiesFor === 1 && x.penaltiesAgainst === 0).length).toEqual(3);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.penaltiesFor === 0 && x.penaltiesAgainst === 1).length).toEqual(2);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.penaltiesFor === 0 && x.penaltiesAgainst === 0).length).toEqual(0);
+
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Shot).length).toEqual(5);
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.BlockedShot).length).toEqual(1);
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Hit).length).toEqual(2);
@@ -154,11 +178,27 @@ describe('Test the constructLivePlays', () => {
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.FaceoffLoss).length).toEqual(3);
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Takeaway).length).toEqual(3);
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Giveaway).length).toEqual(4);
+
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Save).length).toEqual(5);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.GoalAllowed).length).toEqual(2);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Save && x.penaltiesFor === 1 && x.penaltiesAgainst === 0).length).toEqual(2);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Save && x.penaltiesFor === 0 && x.penaltiesAgainst === 0).length).toEqual(1);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Save && x.penaltiesFor === 0 && x.penaltiesAgainst === 1).length).toEqual(2);
+
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.GoalAllowed).length).toEqual(3);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.GoalAllowed && x.penaltiesFor === 1 && x.penaltiesAgainst === 0).length).toEqual(0);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.GoalAllowed && x.penaltiesFor === 0 && x.penaltiesAgainst === 0).length).toEqual(2);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.GoalAllowed && x.penaltiesFor === 0 && x.penaltiesAgainst === 1).length).toEqual(1);
 
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Goal).length).toEqual(4);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Goal && x.penaltiesFor === 1 && x.penaltiesAgainst === 0).length).toEqual(1);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Goal && x.penaltiesFor === 0 && x.penaltiesAgainst === 1).length).toEqual(2);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Goal && x.penaltiesFor === 0 && x.penaltiesAgainst === 0).length).toEqual(1);
+
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Assist).length).toEqual(8);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Assist && x.penaltiesFor === 1 && x.penaltiesAgainst === 0).length).toEqual(3);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Assist && x.penaltiesFor === 0 && x.penaltiesAgainst === 1).length).toEqual(4);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Assist && x.penaltiesFor === 0 && x.penaltiesAgainst === 0).length).toEqual(1);
+
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Shot).length).toEqual(7);
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.BlockedShot).length).toEqual(2);
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Hit).length).toEqual(4);
@@ -166,7 +206,15 @@ describe('Test the constructLivePlays', () => {
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.FaceoffLoss).length).toEqual(4);
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Takeaway).length).toEqual(4);
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Giveaway).length).toEqual(3);
+
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Save).length).toEqual(3);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.GoalAllowed).length).toEqual(1);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Save && x.penaltiesFor === 1 && x.penaltiesAgainst === 0).length).toEqual(1);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Save && x.penaltiesFor === 0 && x.penaltiesAgainst === 0).length).toEqual(1);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Save && x.penaltiesFor === 0 && x.penaltiesAgainst === 1).length).toEqual(1);
+
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.GoalAllowed).length).toEqual(2);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.GoalAllowed && x.penaltiesFor === 1 && x.penaltiesAgainst === 0).length).toEqual(1);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.GoalAllowed && x.penaltiesFor === 0 && x.penaltiesAgainst === 0).length).toEqual(1);
+    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.GoalAllowed && x.penaltiesFor === 0 && x.penaltiesAgainst === 1).length).toEqual(0);
   });
 });

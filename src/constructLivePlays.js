@@ -12,7 +12,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
       return;
     }
     if (player.position.type === constants.GoalieType) {
-      for (let i = 0; i < playerStats.saves; i += 1) {
+      // Saves
+      for (let i = 0; i < playerStats.powerPlaySaves; i += 1) {
         const doc = {
           ...gameData,
           teamId,
@@ -22,9 +23,41 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.playerId = playerId;
         doc.handedness = handedness;
         doc.eventTypeId = constants.Save;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 1;
         events.push(doc);
       }
-      for (let i = 0; i < playerStats.shots - playerStats.saves; i += 1) {
+      for (let i = 0; i < playerStats.shortHandedSaves; i += 1) {
+        const doc = {
+          ...gameData,
+          teamId,
+          teamStatus,
+          playerId,
+        };
+        doc.playerId = playerId;
+        doc.handedness = handedness;
+        doc.eventTypeId = constants.Save;
+        doc.penaltiesAgainst = 1;
+        doc.penaltiesFor = 0;
+        events.push(doc);
+      }
+      for (let i = 0; i < playerStats.evenSaves; i += 1) {
+        const doc = {
+          ...gameData,
+          teamId,
+          teamStatus,
+          playerId,
+        };
+        doc.playerId = playerId;
+        doc.handedness = handedness;
+        doc.eventTypeId = constants.Save;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
+        events.push(doc);
+      }
+
+      // Goals Allowed
+      for (let i = 0; i < playerStats.powerPlayShotsAgainst - playerStats.powerPlaySaves; i += 1) {
         const doc = {
           ...gameData,
           teamId,
@@ -34,10 +67,11 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.playerId = playerId;
         doc.handedness = handedness;
         doc.eventTypeId = constants.GoalAllowed;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 1;
         events.push(doc);
       }
-    } else {
-      for (let i = 0; i < playerStats.assists; i += 1) {
+      for (let i = 0; i < playerStats.evenShotsAgainst - playerStats.evenSaves; i += 1) {
         const doc = {
           ...gameData,
           teamId,
@@ -46,10 +80,28 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         };
         doc.playerId = playerId;
         doc.handedness = handedness;
-        doc.eventTypeId = constants.Assist;
+        doc.eventTypeId = constants.GoalAllowed;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
         events.push(doc);
       }
-      for (let i = 0; i < playerStats.goals; i += 1) {
+      for (let i = 0; i < playerStats.shortHandedShotsAgainst - playerStats.shortHandedSaves; i += 1) {
+        const doc = {
+          ...gameData,
+          teamId,
+          teamStatus,
+          playerId,
+        };
+        doc.playerId = playerId;
+        doc.handedness = handedness;
+        doc.eventTypeId = constants.GoalAllowed;
+        doc.penaltiesAgainst = 1;
+        doc.penaltiesFor = 0;
+        events.push(doc);
+      }
+    } else {
+      // Goals
+      for (let i = 0; i < playerStats.goals - playerStats.powerPlayGoals - playerStats.shortHandedGoals; i += 1) {
         const doc = {
           ...gameData,
           teamId,
@@ -59,8 +111,83 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.playerId = playerId;
         doc.handedness = handedness;
         doc.eventTypeId = constants.Goal;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
         events.push(doc);
       }
+      for (let i = 0; i < playerStats.powerPlayGoals; i += 1) {
+        const doc = {
+          ...gameData,
+          teamId,
+          teamStatus,
+          playerId,
+        };
+        doc.playerId = playerId;
+        doc.handedness = handedness;
+        doc.eventTypeId = constants.Goal;
+        doc.penaltiesAgainst = 1;
+        doc.penaltiesFor = 0;
+        events.push(doc);
+      }
+      for (let i = 0; i < playerStats.shortHandedGoals; i += 1) {
+        const doc = {
+          ...gameData,
+          teamId,
+          teamStatus,
+          playerId,
+        };
+        doc.playerId = playerId;
+        doc.handedness = handedness;
+        doc.eventTypeId = constants.Goal;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 1;
+        events.push(doc);
+      }
+      // Assists
+      for (let i = 0; i < playerStats.assists - playerStats.powerPlayAssists - playerStats.shortHandedAssists; i += 1) {
+        const doc = {
+          ...gameData,
+          teamId,
+          teamStatus,
+          playerId,
+        };
+        doc.playerId = playerId;
+        doc.handedness = handedness;
+        doc.eventTypeId = constants.Assist;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
+        events.push(doc);
+      }
+      for (let i = 0; i < playerStats.powerPlayAssists; i += 1) {
+        const doc = {
+          ...gameData,
+          teamId,
+          teamStatus,
+          playerId,
+        };
+        doc.playerId = playerId;
+        doc.handedness = handedness;
+        doc.eventTypeId = constants.Assist;
+        doc.penaltiesAgainst = 1;
+        doc.penaltiesFor = 0;
+        events.push(doc);
+      }
+      for (let i = 0; i < playerStats.shortHandedAssists; i += 1) {
+        const doc = {
+          ...gameData,
+          teamId,
+          teamStatus,
+          playerId,
+        };
+        doc.playerId = playerId;
+        doc.handedness = handedness;
+        doc.eventTypeId = constants.Assist;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 1;
+        events.push(doc);
+      }
+
+      // Others
       for (let i = 0; i < playerStats.shots; i += 1) {
         const doc = {
           ...gameData,
@@ -71,6 +198,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.playerId = playerId;
         doc.handedness = handedness;
         doc.eventTypeId = constants.Shot;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.hits; i += 1) {
@@ -83,6 +212,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.playerId = playerId;
         doc.handedness = handedness;
         doc.eventTypeId = constants.Hit;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.faceOffWins; i += 1) {
@@ -95,6 +226,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.playerId = playerId;
         doc.handedness = handedness;
         doc.eventTypeId = constants.Faceoff;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.faceoffTaken - playerStats.faceOffWins; i += 1) {
@@ -107,6 +240,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.playerId = playerId;
         doc.handedness = handedness;
         doc.eventTypeId = constants.FaceoffLoss;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.takeaways; i += 1) {
@@ -119,6 +254,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.playerId = playerId;
         doc.handedness = handedness;
         doc.eventTypeId = constants.Takeaway;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.giveaways; i += 1) {
@@ -131,6 +268,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.playerId = playerId;
         doc.handedness = handedness;
         doc.eventTypeId = constants.Giveaway;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.blocked; i += 1) {
@@ -143,6 +282,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.playerId = playerId;
         doc.handedness = handedness;
         doc.eventTypeId = constants.BlockedShot;
+        doc.penaltiesAgainst = 0;
+        doc.penaltiesFor = 0;
         events.push(doc);
       }
     }
