@@ -3,6 +3,7 @@ const parseLivePlays = require('../parseLivePlays');
 let gamePk;
 let gameEvents;
 let gameShifts;
+let gamePenalties;
 let awayTeamId;
 let homeTeamId;
 
@@ -50,11 +51,12 @@ describe('Test the parseLivePlays Method', () => {
         data: [],
       },
     };
+    gamePenalties = [];
   });
 
   test.each([[undefined], [[]]])('Should return succesfully with empty plays', (players) => {
     gameEvents.data.liveData.plays.allPlays.push({ players });
-    expect(() => parseLivePlays(gamePk, gameEvents, gameShifts)).not.toThrow();
+    expect(() => parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties)).not.toThrow();
   });
 
   test('Should handle play with undefined data', () => {
@@ -83,7 +85,7 @@ describe('Test the parseLivePlays Method', () => {
       team,
       players,
     }];
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts);
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
     expect(events.length).toEqual(1);
 
     const doc = events[0];
@@ -94,6 +96,8 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.event_type_id).toEqual(result.eventTypeId);
     expect(doc.game_winning_goal).toEqual(undefined);
     expect(doc.strength).toEqual(undefined);
+    expect(doc.penalty_severity).toEqual(undefined);
+    expect(doc.penalty_minutes).toEqual(undefined);
     expect(doc.play_time).toEqual(1356);
     expect(doc.date_time).toEqual(about.dateTime);
     expect(doc.x).toEqual(undefined);
@@ -113,6 +117,8 @@ describe('Test the parseLivePlays Method', () => {
         code: 'EVEN',
       },
       secondaryType: 'Wrist Shot',
+      penaltySeverity: 'Major',
+      penaltyMinutes: 4,
     };
     const about = {
       period: 1,
@@ -141,7 +147,7 @@ describe('Test the parseLivePlays Method', () => {
       },
       players,
     }];
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts);
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
     expect(events.length).toEqual(1);
 
     const doc = events[0];
@@ -152,6 +158,8 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.event_type_id).toEqual(result.eventTypeId);
     expect(doc.game_winning_goal).toEqual(true);
     expect(doc.strength).toEqual('EVEN');
+    expect(doc.penalty_severity).toEqual('Major');
+    expect(doc.penalty_minutes).toEqual(4);
     expect(doc.secondary_type).toEqual('Wrist Shot');
     expect(doc.play_time).toEqual(156);
     expect(doc.date_time).toEqual(about.dateTime);
@@ -167,16 +175,16 @@ describe('Test the parseLivePlays Method', () => {
     ['HOME', 'BLOCKED_SHOT', 'SHOT_BLOCKED', 'AWAY', 'Forward'],
     ['HOME', 'SHOT', 'SAVE', 'AWAY', 'Forward'],
     ['HOME', 'FACEOFF', 'FACEOFF_LOSS', 'AWAY', 'Forward'],
+    ['HOME', 'PENALTY', 'PENALTY_ON', 'AWAY', 'Forward'],
     ['HOME', 'GOAL', 'ASSIST', 'HOME', 'Forward'],
     ['HOME', 'GOAL', 'GOAL_ALLOWED', 'AWAY', 'Goalie'],
     ['AWAY', 'HIT', 'HITTEE', 'HOME', 'Forward'],
     ['AWAY', 'BLOCKED_SHOT', 'SHOT_BLOCKED', 'HOME', 'Forward'],
     ['AWAY', 'SHOT', 'SAVE', 'HOME', 'Forward'],
     ['AWAY', 'FACEOFF', 'FACEOFF_LOSS', 'HOME', 'Forward'],
+    ['AWAY', 'PENALTY', 'PENALTY_ON', 'HOME', 'Forward'],
     ['AWAY', 'GOAL', 'ASSIST', 'AWAY', 'Forward'],
     ['AWAY', 'GOAL', 'GOAL_ALLOWED', 'HOME', 'Goalie'],
-    ['AWAY', 'KAPPA', 'UNKNOWN', 'HOME', 'Goalie'],
-    ['HOME', 'KAPPA', 'UNKNOWN', 'AWAY', 'Goalie'],
   ])('Should handle play with player data', (teamStatus, eventTypeId, secondEventTypeId, secondTeamStatus, secondaryPlayerType) => {
     const player1 = 666;
     const player2 = 555;
@@ -221,7 +229,7 @@ describe('Test the parseLivePlays Method', () => {
       ],
     }];
 
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts);
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
 
     expect(events.length).toEqual(2);
 
@@ -309,7 +317,7 @@ describe('Test the parseLivePlays Method', () => {
         period: 2,
       },
     ];
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts);
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
     expect(events.length).toEqual(1);
 
     const doc = events[0];
@@ -394,7 +402,7 @@ describe('Test the parseLivePlays Method', () => {
         period: 1,
       },
     ];
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts);
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
     expect(events.length).toEqual(2);
 
     let doc = events[0];
@@ -405,5 +413,114 @@ describe('Test the parseLivePlays Method', () => {
     doc = events[1];
     expect(doc.players.length).toEqual(1);
     expect(doc.players[0]).toEqual(newPlayer1);
+  });
+
+  test('Should determine strength of play', () => {
+    gameEvents.data.liveData.plays.allPlays = [
+      {
+        result: {
+          eventTypeId: 'in1',
+        },
+        about: {
+          period: 1,
+          periodType: 'regular',
+          periodTime: '02:31',
+        },
+        team: {
+          id: 2,
+        },
+        players: [{
+          player: {
+            id: 1,
+          },
+        }],
+      },
+      {
+        result: {
+          eventTypeId: 'in2',
+        },
+        about: {
+          period: 1,
+          periodType: 'regular',
+          periodTime: '04:29',
+        },
+        team: {
+          id: 1,
+        },
+        players: [{
+          player: {
+            id: 1,
+          },
+        }],
+      },
+      {
+        result: {
+          eventTypeId: 'notin1',
+        },
+        about: {
+          period: 1,
+          periodType: 'regular',
+          periodTime: '02:30',
+        },
+        team: {
+          id: 2,
+        },
+        players: [{
+          player: {
+            id: 1,
+          },
+        }],
+      },
+      {
+        result: {
+          eventTypeId: 'notin2',
+        },
+        about: {
+          period: 1,
+          periodType: 'regular',
+          periodTime: '04:30',
+        },
+        team: {
+          id: 2,
+        },
+        players: [{
+          player: {
+            id: 1,
+          },
+        }],
+      },
+    ];
+
+    gamePenalties = [
+      {
+        startTime: 150,
+        endTime: 270,
+        teamId: 2,
+      },
+      {
+        startTime: 45,
+        endTime: 165,
+        teamId: 1,
+      },
+    ];
+
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
+    expect(events.length).toEqual(4);
+
+    let event = events.filter(x => x.event_type_id === 'in1')[0];
+    expect(event.penalties_for).toEqual(1);
+    expect(event.penalties_against).toEqual(1);
+
+    event = events.filter(x => x.event_type_id === 'in2')[0];
+    expect(event.penalties_for).toEqual(0);
+    expect(event.penalties_against).toEqual(1);
+
+    event = events.filter(x => x.event_type_id === 'notin1')[0];
+    expect(event.penalties_for).toEqual(0);
+    expect(event.penalties_against).toEqual(1);
+
+    event = events.filter(x => x.event_type_id === 'notin2')[0];
+    expect(event.penalties_for).toEqual(0);
+    expect(event.penalties_against).toEqual(0);
   });
 });

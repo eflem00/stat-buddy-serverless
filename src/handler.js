@@ -3,6 +3,7 @@ const moment = require('moment');
 const aws = require('aws-sdk');
 const parseLivePlays = require('./parseLivePlays');
 const constructLivePlays = require('./constructLivePlays');
+const parsePenalties = require('./parsePenalties');
 
 aws.config.update({ region: process.env.REGION });
 const ddb = new aws.DynamoDB.DocumentClient();
@@ -51,23 +52,23 @@ module.exports.crawl = async () => {
           // Some games are missing plays...
           let events = [];
           if (gameEvents.data.liveData.plays.allPlays.length > 0) {
-            events = parseLivePlays(gamePk, gameEvents, gameShifts);
+            const gamePenalties = parsePenalties(gameEvents);
+            events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
           } else {
             events = constructLivePlays(gamePk, gameEvents);
           }
 
           console.log(`Found [${events.length}] events for game [${gamePk}]`);
 
-          let promises = [];
-          for (let i = 0; i < events.length; i++) {
+          const promises = [];
+          for (let i = 0; i < events.length; i += 1) {
             promises.push(ddb.put({
               TableName: 'events',
               Item: events[i],
             }).promise());
           }
-
           await Promise.all(promises);
-          
+
           console.log(`Finished game [${gamePk}]`);
         }
       }
@@ -88,40 +89,3 @@ module.exports.crawl = async () => {
     console.log('Error Crawling APIs. Ex: ', ex);
   }
 };
-
-
-          // if (events.length > 0) {
-          //   let batch = [];
-          //   batch.push({
-          //     PutRequest: {
-          //       Item: events[0],
-          //     },
-          //   });
-          //   const params = {
-          //     RequestItems: {
-          //       'events': batch,
-          //     },
-          //   };
-          //   ddb.batchWrite(params, (err, data) => {
-          //     if (err) console.log(err);
-          //     else console.log(data);
-          //   });
-          // }
-
-          // for (let i = 0; i < events.length; i += 1) {
-          //   let batch = [];
-          //   batch.push({
-          //     PutRequest: {
-          //       Item: events[i],
-          //     },
-          //   });
-          //   if (batch.length === 25) {
-          //     const params = {
-          //       RequestItems: {
-          //         'events': [...batch],
-          //       },
-          //     };
-          //     await ddb.batchWrite(params).promise();
-          //     batch = [];
-          //   }
-          // }
