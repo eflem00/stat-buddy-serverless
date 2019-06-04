@@ -4,6 +4,7 @@ const aws = require('aws-sdk');
 const parseLivePlays = require('./parseLivePlays');
 const constructLivePlays = require('./constructLivePlays');
 const parsePenalties = require('./parsePenalties');
+const parseBoxScores = require('./parseBoxScores');
 const constants = require('./constants');
 
 aws.config.update({ region: process.env.REGION });
@@ -18,7 +19,7 @@ module.exports.crawl = async () => {
         id: constants.IndexId,
       },
     }).promise();
-    const startIndex = response.Item.startIndex ? moment(response.Item.startIndex) : moment('2010-10-07');
+    const startIndex = moment(response.Item.startIndex);
 
     // const startIndex = moment('2018-02-23'); // This one has an empty plays array
 
@@ -32,32 +33,54 @@ module.exports.crawl = async () => {
           const gamePk = schedule.data.dates[0].games[index].gamePk;
           console.log(`Beginning game [${gamePk}]`);
 
+          // Fetch data
           const gameEvents = await request(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/feed/live`);
           const gameShifts = await request(`http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=${gamePk}`);
+          const gameSummaries = await request(`https://api.nhle.com/stats/rest/team?reportType=basic&isGame=true&reportName=teamsummary&cayenneExp=gameId=${gamePk}`);
 
           // Check that the game state is final
           if (gameEvents.data.gameData.status.abstractGameState !== 'Final') {
             throw new Error('Game state not final yet');
           }
 
+          // Parse data
           let events = [];
+          let summaries = [];
           if (gameEvents.data.liveData.plays.allPlays.length > 0) {
             const gamePenalties = parsePenalties(gameEvents);
             events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
+            summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
           } else {
             events = constructLivePlays(gamePk, gameEvents);
+            summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
           }
 
+          // Write data
           console.log(`Writting [${events.length}] events to db`);
 
-          const promises = [];
-          for (let i = 0; i < events.length; i += 1) {
-            promises.push(ddb.put({
-              TableName: constants.EventsTable,
-              Item: events[i],
-            }).promise());
+          if (events.length > 0) {
+            const promises = [];
+            for (let i = 0; i < events.length; i += 1) {
+              promises.push(ddb.put({
+                TableName: constants.EventsTable,
+                Item: events[i],
+              }).promise());
+            }
+            await Promise.all(promises);
           }
-          await Promise.all(promises);
+
+          console.log(`Writting [${summaries.length}] summaries to db`);
+
+          if (summaries.length > 0) {
+            const promises = [];
+            for (let i = 0; i < summaries.length; i += 1) {
+              promises.push(ddb.put({
+                TableName: constants.SummariesTable,
+                Item: summaries[i],
+              }).promise());
+            }
+            await Promise.all(promises);
+          }
 
           console.log(`Finished game [${gamePk}]`);
         }
@@ -73,7 +96,7 @@ module.exports.crawl = async () => {
       },
     }).promise();
 
-    console.log('Finished crawling for date: ', startIndex.format('YYYY-MM-DD'));
+    console.log('Finished crawling for date: ', startIndex.subtract(1, 'days').format('YYYY-MM-DD'));
   } catch (ex) {
     console.log('Ex: ', ex);
   }

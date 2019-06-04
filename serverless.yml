@@ -28,6 +28,16 @@ provider:
         - dynamodb:DeleteItem
         - dynamodb:BatchWriteItem
       Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/Events"
+    - Effect: Allow
+      Action: 
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:BatchWriteItem
+      Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/Summaries"
 
 functions:
   crawl:

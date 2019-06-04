@@ -1,4 +1,4 @@
-const getTotalSeconds = require('./getTotalSeconds');
+const timeHelper = require('./timeHelper');
 const constants = require('./constants');
 
 module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties) {
@@ -15,7 +15,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
     if (play.players && play.players.length > 0) {
       const doc = { ...gameData };
 
-      doc.playTime = getTotalSeconds(play.about.period, play.about.periodTime);
+      doc.playTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime);
       doc.dateTime = play.about.dateTime;
       doc.eventTypeId = play.result.eventTypeId;
       if (play.result.gameWinningGoal) {
@@ -61,8 +61,8 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       // TODO: Play time in overtime
       const players = new Set();
       gameShifts.data.data.forEach((gameShift) => {
-        const startTime = getTotalSeconds(gameShift.period, gameShift.startTime);
-        const endTime = getTotalSeconds(gameShift.period, gameShift.endTime);
+        const startTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.startTime);
+        const endTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.endTime);
         const playTime = doc.playTime;
 
         if (playTime % 1200 !== 0 && startTime < playTime && playTime <= endTime) {
