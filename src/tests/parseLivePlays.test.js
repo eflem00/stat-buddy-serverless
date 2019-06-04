@@ -92,7 +92,7 @@ describe('Test the parseLivePlays Method', () => {
     const doc = events[0];
     expect(doc.gamePk).toEqual(gamePk);
     expect(doc.gameType).toEqual(gameData.game.type);
-    expect(doc.gameSeason).toEqual(gameData.game.season);
+    expect(doc.gameSeason).toEqual(parseInt(gameData.game.season, 10));
     expect(doc.venue).toEqual(gameData.venue.name);
     expect(doc.eventTypeId).toEqual(result.eventTypeId);
     expect(doc.gameWinningGoal).toEqual(undefined);
@@ -151,7 +151,7 @@ describe('Test the parseLivePlays Method', () => {
     const doc = events[0];
     expect(doc.gamePk).toEqual(gamePk);
     expect(doc.gameType).toEqual(gameData.game.type);
-    expect(doc.gameSeason).toEqual(gameData.game.season);
+    expect(doc.gameSeason).toEqual(parseInt(gameData.game.season, 10));
     expect(doc.venue).toEqual(gameData.venue.name);
     expect(doc.eventTypeId).toEqual(result.eventTypeId);
     expect(doc.gameWinningGoal).toEqual(true);

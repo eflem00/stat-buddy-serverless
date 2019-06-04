@@ -1,5 +1,5 @@
 const moment = require('moment');
-
+const constants = require('./constants');
 
 function timeToInt(time) {
   const momentTime = moment(time, 'mm:ss');
@@ -7,11 +7,14 @@ function timeToInt(time) {
 }
 
 
-function getTotalSeconds(period, time) {
-  // TODO: OT not always 20 minutes...
+function getTotalSeconds(period, time, gameType) {
   let seconds = timeToInt(time);
   for (let i = 1; i < period; i += 1) {
-    seconds += 1200;
+    if (i < 4 || gameType === constants.PlayoffGameType) {
+      seconds += 1200;
+    } else {
+      seconds += 300;
+    }
   }
   return seconds;
 }

@@ -109,7 +109,7 @@ describe('Test the parseBoxScore Method', () => {
     expect(firstTeamSummary.dateTime).toEqual(gameSummaries.data.data[0].gameDate);
     expect(firstTeamSummary.gamePk).toEqual(gameSummaries.data.data[0].gameId);
     expect(firstTeamSummary.gameType).toEqual(gameEvents.data.gameData.game.type);
-    expect(firstTeamSummary.gameSeason).toEqual(gameEvents.data.gameData.game.season);
+    expect(firstTeamSummary.gameSeason).toEqual(parseInt(gameEvents.data.gameData.game.season, 10));
     expect(firstTeamSummary.venue).toEqual(gameEvents.data.gameData.venue.name);
     expect(firstTeamSummary.opposingTeamId).toEqual(gameSummaries.data.data[1].teamId);
     expect(firstTeamSummary.win).toEqual(gameSummaries.data.data[1].losses);
@@ -131,7 +131,7 @@ describe('Test the parseBoxScore Method', () => {
     expect(firstPlayerSummary.dateTime).toEqual(gameSummaries.data.data[0].gameDate);
     expect(firstPlayerSummary.gamePk).toEqual(gameSummaries.data.data[0].gameId);
     expect(firstPlayerSummary.gameType).toEqual(gameEvents.data.gameData.game.type);
-    expect(firstPlayerSummary.gameSeason).toEqual(gameEvents.data.gameData.game.season);
+    expect(firstPlayerSummary.gameSeason).toEqual(parseInt(gameEvents.data.gameData.game.season, 10));
     expect(firstPlayerSummary.venue).toEqual(gameEvents.data.gameData.venue.name);
     expect(firstPlayerSummary.opposingTeamId).toEqual(gameSummaries.data.data[1].teamId);
     expect(firstPlayerSummary.win).toEqual(gameSummaries.data.data[1].losses);
@@ -148,7 +148,7 @@ describe('Test the parseBoxScore Method', () => {
     expect(secondTeamSummary.dateTime).toEqual(gameSummaries.data.data[1].gameDate);
     expect(secondTeamSummary.gamePk).toEqual(gameSummaries.data.data[1].gameId);
     expect(secondTeamSummary.gameType).toEqual(gameEvents.data.gameData.game.type);
-    expect(secondTeamSummary.gameSeason).toEqual(gameEvents.data.gameData.game.season);
+    expect(secondTeamSummary.gameSeason).toEqual(parseInt(gameEvents.data.gameData.game.season, 10));
     expect(secondTeamSummary.venue).toEqual(gameEvents.data.gameData.venue.name);
     expect(secondTeamSummary.opposingTeamId).toEqual(gameSummaries.data.data[0].teamId);
     expect(secondTeamSummary.win).toEqual(gameSummaries.data.data[0].losses);
@@ -170,7 +170,7 @@ describe('Test the parseBoxScore Method', () => {
     expect(secondPlayerSummary.dateTime).toEqual(gameSummaries.data.data[1].gameDate);
     expect(secondPlayerSummary.gamePk).toEqual(gameSummaries.data.data[1].gameId);
     expect(secondPlayerSummary.gameType).toEqual(gameEvents.data.gameData.game.type);
-    expect(secondPlayerSummary.gameSeason).toEqual(gameEvents.data.gameData.game.season);
+    expect(secondPlayerSummary.gameSeason).toEqual(parseInt(gameEvents.data.gameData.game.season, 10));
     expect(secondPlayerSummary.venue).toEqual(gameEvents.data.gameData.venue.name);
     expect(secondPlayerSummary.opposingTeamId).toEqual(gameSummaries.data.data[0].teamId);
     expect(secondPlayerSummary.win).toEqual(gameSummaries.data.data[0].losses);
@@ -192,7 +192,7 @@ describe('Test the parseBoxScore Method', () => {
     expect(thirdPlayerSummary.dateTime).toEqual(gameSummaries.data.data[1].gameDate);
     expect(thirdPlayerSummary.gamePk).toEqual(gameSummaries.data.data[1].gameId);
     expect(thirdPlayerSummary.gameType).toEqual(gameEvents.data.gameData.game.type);
-    expect(thirdPlayerSummary.gameSeason).toEqual(gameEvents.data.gameData.game.season);
+    expect(thirdPlayerSummary.gameSeason).toEqual(parseInt(gameEvents.data.gameData.game.season, 10));
     expect(thirdPlayerSummary.venue).toEqual(gameEvents.data.gameData.venue.name);
     expect(thirdPlayerSummary.opposingTeamId).toEqual(gameSummaries.data.data[0].teamId);
     expect(thirdPlayerSummary.win).toEqual(gameSummaries.data.data[0].losses);

@@ -1,8 +1,14 @@
 const parsePenalties = require('../parsePenalties');
+const constants = require('../constants');
 
 describe('Test the parsePenalties Method', () => {
   const gameEvents = {
     data: {
+      gameData: {
+        game: {
+          type: 'R',
+        },
+      },
       liveData: {
         plays: {
           allPlays: [],
@@ -14,7 +20,7 @@ describe('Test the parsePenalties Method', () => {
     const plays = [
       {
         result: {
-          eventTypeId: 'PENALTY',
+          eventTypeId: constants.Penalty,
           secondaryType: 'Tripping',
           penaltyMinutes: 2,
         },
@@ -28,8 +34,8 @@ describe('Test the parsePenalties Method', () => {
       },
       {
         result: {
-          eventTypeId: 'PENALTY',
-          secondaryType: 'Fighting',
+          eventTypeId: constants.Penalty,
+          secondaryType: constants.FightingPenaltyType,
           penaltyMinutes: 5,
         },
         about: {
@@ -42,7 +48,7 @@ describe('Test the parsePenalties Method', () => {
       },
       {
         result: {
-          eventTypeId: 'SHOT',
+          eventTypeId: constants.Shot,
           secondaryType: 'Wrist Shot',
         },
         about: {

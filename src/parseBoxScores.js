@@ -8,7 +8,7 @@ function getTeamSummaries(gamePk, gameEvents, teamBoxscore, opposingTeamBoxscore
     dateTime: teamBoxscore.gameDate,
     gamePk,
     gameType: gameEvents.data.gameData.game.type,
-    gameSeason: gameEvents.data.gameData.game.season,
+    gameSeason: parseInt(gameEvents.data.gameData.game.season, 10),
     venue: gameEvents.data.gameData.venue.name,
     opposingTeamId: opposingTeamBoxscore.teamId,
     win: opposingTeamBoxscore.losses,

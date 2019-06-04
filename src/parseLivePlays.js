@@ -7,7 +7,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
   const gameData = {
     gamePk,
     gameType: gameEvents.data.gameData.game.type,
-    gameSeason: gameEvents.data.gameData.game.season,
+    gameSeason: parseInt(gameEvents.data.gameData.game.season, 10),
     venue: gameEvents.data.gameData.venue.name,
   };
 
@@ -15,7 +15,8 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
     if (play.players && play.players.length > 0) {
       const doc = { ...gameData };
 
-      doc.playTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime);
+      doc.playTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameData.gameType);
+      doc.periodType = play.about.periodType;
       doc.dateTime = play.about.dateTime;
       doc.eventTypeId = play.result.eventTypeId;
       if (play.result.gameWinningGoal) {
@@ -61,8 +62,8 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       // TODO: Play time in overtime
       const players = new Set();
       gameShifts.data.data.forEach((gameShift) => {
-        const startTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.startTime);
-        const endTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.endTime);
+        const startTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.startTime, gameData.gameType);
+        const endTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.endTime, gameData.gameType);
         const playTime = doc.playTime;
 
         if (playTime % 1200 !== 0 && startTime < playTime && playTime <= endTime) {
