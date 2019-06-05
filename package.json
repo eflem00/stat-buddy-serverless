@@ -1,7 +1,7 @@
 {
-  "name": "stat-buddy-crawler",
+  "name": "stat-buddy-serverless",
   "version": "1.0.0",
-  "description": "Serverless Lambda Crawler for the NHL APIs",
+  "description": "Serverless Infrastructure for statbuddy.ca",
   "main": "handler.js",
   "scripts": {
     "start": "serverless invoke -f crawl -l",
