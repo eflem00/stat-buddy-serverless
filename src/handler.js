@@ -44,10 +44,16 @@ module.exports.crawl = async () => {
           }
 
           // Parse data
-          const events = gameEvents.data.liveData.plays.allPlays.length > 0
-            ? parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties)
-            : constructLivePlays(gamePk, gameEvents);
-          const summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
+          let events = [];
+          let summaries = [];
+          if (gameEvents.data.liveData.plays.allPlays.length > 0) {
+            const gamePenalties = parsePenalties(gameEvents);
+            events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
+            summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
+          } else {
+            events = constructLivePlays(gamePk, gameEvents);
+            summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
+          }
 
           // Write data
           console.log(`Writting [${events.length}] events to db`);
