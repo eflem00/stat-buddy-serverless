@@ -1,4 +1,4 @@
-service: stat-buddy-crawler
+service: stat-buddy-serverless
 
 provider:
   name: aws

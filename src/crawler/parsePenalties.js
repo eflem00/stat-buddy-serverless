@@ -17,7 +17,7 @@ module.exports = function parsePenalties(gameEvents) {
   });
 
   gameEvents.data.liveData.plays.allPlays.forEach((play) => {
-    if (play.result.eventTypeId === constants.Penalty && play.result.secondaryType !== constants.FightingPenaltyType) {
+    if (play.result.eventTypeId === constants.Penalty && play.result.secondaryType !== constants.FightingPenaltyType && play.result.penaltyMinutes <= 5) {
       const startTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameData.type);
       let endTime = startTime + play.result.penaltyMinutes * 60;
 
