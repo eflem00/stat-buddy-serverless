@@ -17,30 +17,10 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/Indexes"
-    - Effect: Allow
-      Action: 
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-        - dynamodb:BatchWriteItem
-      Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/Events"
-    - Effect: Allow
-      Action: 
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-        - dynamodb:BatchWriteItem
-      Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/Summaries"
+      Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/*"
 
 functions:
   crawl:
-    handler: src/handler.crawl
+    handler: src/crawler/handler.crawl
     events:
       - schedule: cron(0/5 * * * ? *)
