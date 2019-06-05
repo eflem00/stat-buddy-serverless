@@ -48,12 +48,25 @@ describe('Test the parsePenalties Method', () => {
       },
       {
         result: {
-          eventTypeId: constants.Shot,
+          eventTypeId: constants.Goal,
           secondaryType: 'Wrist Shot',
         },
         about: {
           period: 3,
           periodTime: '05:59',
+        },
+        team: {
+          id: 2,
+        },
+      },
+      {
+        result: {
+          eventTypeId: constants.Goal,
+          secondaryType: 'Wrist Shot',
+        },
+        about: {
+          period: 2,
+          periodTime: '17:38',
         },
         team: {
           id: 2,
@@ -71,5 +84,51 @@ describe('Test the parsePenalties Method', () => {
     expect(penalty.startTime).toEqual(2221);
     expect(penalty.endTime).toEqual(2341);
     expect(penalty.teamId).toEqual(2);
+  });
+
+  test.each([
+    [2, '17:01', 2, 2, '17:38', 2221, 2258],
+    [2, '17:01', 4, 2, '17:38', 2221, 2378],
+    [2, '17:01', 5, 2, '17:38', 2221, 2521],
+  ])('Should subtract time from 2/4 min penalties when goal scored', (penaltyPeriod, penaltyTime, penaltyMinutes, goalPeriod, goalTime, startTime, endTime) => {
+    const plays = [
+      {
+        result: {
+          eventTypeId: constants.Penalty,
+          secondaryType: 'Tripping',
+          penaltyMinutes,
+        },
+        about: {
+          period: penaltyPeriod,
+          periodTime: penaltyTime,
+        },
+        team: {
+          id: 2,
+        },
+      },
+      {
+        result: {
+          eventTypeId: constants.Goal,
+          secondaryType: 'Wrist shot',
+        },
+        about: {
+          period: goalPeriod,
+          periodTime: goalTime,
+        },
+        team: {
+          id: 3,
+        },
+      },
+    ];
+    gameEvents.data.liveData.plays.allPlays = plays;
+
+    const penalties = parsePenalties(gameEvents);
+
+    expect(penalties.length).toEqual(1);
+
+    const penalty = penalties[0];
+
+    expect(penalty.startTime).toEqual(startTime);
+    expect(penalty.endTime).toEqual(endTime);
   });
 });

@@ -3,12 +3,12 @@ const constants = require('./constants');
 
 module.exports = function parsePenalties(gameEvents) {
   const penalties = [];
-  
+
   const gameData = gameEvents.data.gameData.game;
   const goalTimes = [];
   gameEvents.data.liveData.plays.allPlays.forEach((play) => {
     if (play.result.eventTypeId === constants.Goal) {
-      goalTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameData.type);
+      const goalTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameData.type);
       goalTimes.push({
         time: goalTime,
         teamId: play.team.id,
@@ -19,7 +19,7 @@ module.exports = function parsePenalties(gameEvents) {
   gameEvents.data.liveData.plays.allPlays.forEach((play) => {
     if (play.result.eventTypeId === constants.Penalty && play.result.secondaryType !== constants.FightingPenaltyType) {
       const startTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameData.type);
-      const endTime = startTime + play.result.penaltyMinutes * 60;
+      let endTime = startTime + play.result.penaltyMinutes * 60;
 
       // Still todo...
       // offsetting penalties
