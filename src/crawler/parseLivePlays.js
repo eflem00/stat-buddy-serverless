@@ -61,6 +61,8 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       // Find players on the ice
       // TODO: Play time in overtime
       const players = new Set();
+      doc.playerCount = 0;
+      doc.opposingPlayerCount = 0;
       gameShifts.data.data.forEach((gameShift) => {
         const startTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.startTime, gameData.gameType);
         const endTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.endTime, gameData.gameType);
@@ -68,8 +70,18 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
 
         if (playTime % 1200 !== 0 && startTime < playTime && playTime <= endTime) {
           players.add(gameShift.playerId);
+          if (gameShift.teamId === doc.teamId) {
+            doc.playerCount += 1;
+          } else {
+            doc.opposingPlayerCount += 1;
+          }
         } else if (playTime % 1200 === 0 && gameShift.period === play.about.period && (startTime === playTime || playTime === endTime)) {
           players.add(gameShift.playerId);
+          if (gameShift.teamId === doc.teamId) {
+            doc.playerCount += 1;
+          } else {
+            doc.opposingPlayerCount += 1;
+          }
         }
       });
       doc.players = Array.from(players);

@@ -131,4 +131,63 @@ describe('Test the parsePenalties Method', () => {
     expect(penalty.startTime).toEqual(startTime);
     expect(penalty.endTime).toEqual(endTime);
   });
+
+  test('Should only subtract time from first penalty', () => {
+    const plays = [
+      {
+        result: {
+          eventTypeId: constants.Penalty,
+          secondaryType: 'Tripping',
+          penaltyMinutes: 2,
+        },
+        about: {
+          period: 1,
+          periodTime: '02:45',
+        },
+        team: {
+          id: 2,
+        },
+      },
+      {
+        result: {
+          eventTypeId: constants.Penalty,
+          secondaryType: 'Tripping',
+          penaltyMinutes: 4,
+        },
+        about: {
+          period: 1,
+          periodTime: '03:30',
+        },
+        team: {
+          id: 2,
+        },
+      },
+      {
+        result: {
+          eventTypeId: constants.Goal,
+          secondaryType: 'Wrist shot',
+        },
+        about: {
+          period: 1,
+          periodTime: '03:00',
+        },
+        team: {
+          id: 3,
+        },
+      },
+    ];
+    gameEvents.data.liveData.plays.allPlays = plays;
+
+    const penalties = parsePenalties(gameEvents);
+
+    expect(penalties.length).toEqual(2);
+
+    let penalty = penalties[0];
+    expect(penalty.startTime).toEqual(165);
+    expect(penalty.endTime).toEqual(180);
+
+    penalty = penalties[1];
+    expect(penalty.startTime).toEqual(210);
+    expect(penalty.endTime).toEqual(450);
+  });
 });

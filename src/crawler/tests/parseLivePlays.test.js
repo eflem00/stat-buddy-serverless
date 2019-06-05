@@ -72,9 +72,6 @@ describe('Test the parseLivePlays Method', () => {
       periodTime: '02:36',
       dateTime: '2018-01-01T18:46:36.233Z',
     };
-    const team = {
-      id: awayTeamId,
-    };
     const players = [{
       player: {
         id: '1',
@@ -83,7 +80,6 @@ describe('Test the parseLivePlays Method', () => {
     gameEvents.data.liveData.plays.allPlays = [{
       result,
       about,
-      team,
       players,
     }];
     const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
@@ -103,9 +99,8 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.dateTime).toEqual(about.dateTime);
     expect(doc.x).toEqual(undefined);
     expect(doc.y).toEqual(undefined);
-
-    expect(doc.teamId).toEqual(awayTeamId);
-    expect(doc.teamStatus).toEqual(constants.Away);
+    expect(doc.teamId).toEqual(undefined);
+    expect(doc.teamStatus).toEqual(undefined);
   });
 
   test.each([[constants.Home], [constants.Away]])('Should check team status', (status) => {
@@ -268,6 +263,9 @@ describe('Test the parseLivePlays Method', () => {
           id: player1,
         },
       }],
+      team: {
+        id: 1,
+      },
     }];
 
     const notInPlayerId1 = 666;
@@ -282,36 +280,42 @@ describe('Test the parseLivePlays Method', () => {
         endTime: '03:45',
         playerId: notInPlayerId1,
         period: 2,
+        teamId: 1,
       },
       {
         startTime: '02:36',
         endTime: '03:45',
         playerId: notInPlayerId2,
         period: 2,
+        teamId: 2,
       },
       {
         startTime: '02:15',
         endTime: '03:45',
         playerId: notInPlayerId3,
         period: 4,
+        teamId: 1,
       },
       {
         startTime: '02:15',
         endTime: '02:20',
         playerId: notInPlayerId4,
         period: 2,
+        teamId: 2,
       },
       {
         startTime: '02:20',
         endTime: '03:45',
         playerId: alreadyInPlayerId,
         period: 2,
+        teamId: 1,
       },
       {
         startTime: '02:35',
         endTime: '02:36',
         playerId: newPlayer1,
         period: 2,
+        teamId: 2,
       },
     ];
     const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
@@ -319,6 +323,8 @@ describe('Test the parseLivePlays Method', () => {
 
     const doc = events[0];
     expect(doc.players.length).toEqual(2);
+    expect(doc.playerCount).toEqual(1);
+    expect(doc.opposingPlayerCount).toEqual(1);
 
     let playerId = doc.players[0];
     expect(playerId).toEqual(player1);
@@ -355,6 +361,9 @@ describe('Test the parseLivePlays Method', () => {
           id: player1,
         },
       }],
+      team: {
+        id: 1,
+      },
     },
     {
       result: {
@@ -371,6 +380,9 @@ describe('Test the parseLivePlays Method', () => {
           id: newPlayer1,
         },
       }],
+      team: {
+        id: 1,
+      },
     }];
 
     gameShifts.data.data = [
@@ -379,24 +391,28 @@ describe('Test the parseLivePlays Method', () => {
         endTime: '03:45',
         playerId: notInPlayerId1,
         period: 2,
+        teamId: 2,
       },
       {
         startTime: '00:00',
         endTime: '03:45',
         playerId: player1,
         period: 1,
+        teamId: 1,
       },
       {
         startTime: '00:00',
         endTime: '03:45',
         playerId: newPlayer1,
         period: 1,
+        teamId: 2,
       },
       {
         startTime: '18:55',
         endTime: '20:00',
         playerId: newPlayer1,
         period: 1,
+        teamId: 2,
       },
     ];
     const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
@@ -406,10 +422,14 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.players.length).toEqual(2);
     expect(doc.players[0]).toEqual(player1);
     expect(doc.players[1]).toEqual(newPlayer1);
+    expect(doc.playerCount).toEqual(1);
+    expect(doc.opposingPlayerCount).toEqual(1);
 
     doc = events[1];
     expect(doc.players.length).toEqual(1);
     expect(doc.players[0]).toEqual(newPlayer1);
+    expect(doc.playerCount).toEqual(0);
+    expect(doc.opposingPlayerCount).toEqual(1);
   });
 
   test('Should determine strength of play', () => {

@@ -16,23 +16,22 @@ module.exports = function parsePenalties(gameEvents) {
     }
   });
 
+  // TODO: sort plays by startime first before iterating over them
+  const goalsAlreadyCounted = new Set();
   gameEvents.data.liveData.plays.allPlays.forEach((play) => {
     if (play.result.eventTypeId === constants.Penalty && play.result.secondaryType !== constants.FightingPenaltyType && play.result.penaltyMinutes <= 5) {
       const startTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameData.type);
       let endTime = startTime + play.result.penaltyMinutes * 60;
 
-      // Still todo...
-      // offsetting penalties
-      // stagared penalties?
-      // write tests...
       if (play.result.penaltyMinutes < 5) {
         goalTimes.forEach((goal) => {
-          if (goal.time > startTime && goal.time < endTime && play.team.id !== goal.teamId) {
+          if (!goalsAlreadyCounted.has(goal.time) && goal.time > startTime && goal.time < endTime && play.team.id !== goal.teamId) {
             if (endTime - goal.time < 120) {
               endTime = goal.time;
             } else {
               endTime = goal.time + 120;
             }
+            goalsAlreadyCounted.add(goal.time);
           }
         });
       }

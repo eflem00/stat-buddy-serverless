@@ -166,10 +166,18 @@ describe('Test the constructLivePlays', () => {
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.penaltiesFor === 0 && x.penaltiesAgainst === 1).length).toEqual(2);
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.penaltiesFor === 0 && x.penaltiesAgainst === 0).length).toEqual(0);
 
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.playerCount === 5 && x.opposingPlayerCount === 6).length).toEqual(1);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.playerCount === 6 && x.opposingPlayerCount === 5).length).toEqual(2);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.playerCount === 6 && x.opposingPlayerCount === 6).length).toEqual(0);
+
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist).length).toEqual(5);
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.penaltiesFor === 1 && x.penaltiesAgainst === 0).length).toEqual(3);
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.penaltiesFor === 0 && x.penaltiesAgainst === 1).length).toEqual(2);
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.penaltiesFor === 0 && x.penaltiesAgainst === 0).length).toEqual(0);
+
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.playerCount === 5 && x.opposingPlayerCount === 6).length).toEqual(3);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.playerCount === 6 && x.opposingPlayerCount === 5).length).toEqual(2);
+    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.playerCount === 6 && x.opposingPlayerCount === 6).length).toEqual(0);
 
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Shot).length).toEqual(5);
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.BlockedShot).length).toEqual(1);

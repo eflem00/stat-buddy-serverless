@@ -25,6 +25,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Save;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 1;
+        doc.playerCount = 5;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.shortHandedSaves; i += 1) {
@@ -39,6 +41,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Save;
         doc.penaltiesAgainst = 1;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 5;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.evenSaves; i += 1) {
@@ -53,6 +57,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Save;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
 
@@ -69,6 +75,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.GoalAllowed;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 1;
+        doc.playerCount = 5;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.evenShotsAgainst - playerStats.evenSaves; i += 1) {
@@ -83,6 +91,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.GoalAllowed;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.shortHandedShotsAgainst - playerStats.shortHandedSaves; i += 1) {
@@ -97,6 +107,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.GoalAllowed;
         doc.penaltiesAgainst = 1;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 5;
         events.push(doc);
       }
     } else {
@@ -113,6 +125,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Goal;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.powerPlayGoals; i += 1) {
@@ -127,6 +141,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Goal;
         doc.penaltiesAgainst = 1;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 5;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.shortHandedGoals; i += 1) {
@@ -141,6 +157,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Goal;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 1;
+        doc.playerCount = 5;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       // Assists
@@ -156,6 +174,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Assist;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.powerPlayAssists; i += 1) {
@@ -170,6 +190,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Assist;
         doc.penaltiesAgainst = 1;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 5;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.shortHandedAssists; i += 1) {
@@ -184,6 +206,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Assist;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 1;
+        doc.playerCount = 5;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
 
@@ -200,6 +224,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Shot;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.hits; i += 1) {
@@ -214,6 +240,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Hit;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.faceOffWins; i += 1) {
@@ -228,6 +256,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Faceoff;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.faceoffTaken - playerStats.faceOffWins; i += 1) {
@@ -242,6 +272,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.FaceoffLoss;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.takeaways; i += 1) {
@@ -256,6 +288,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Takeaway;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.giveaways; i += 1) {
@@ -270,6 +304,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.Giveaway;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
       for (let i = 0; i < playerStats.blocked; i += 1) {
@@ -284,6 +320,8 @@ function parseBoxScore(players, gameData, teamId, teamStatus) {
         doc.eventTypeId = constants.BlockedShot;
         doc.penaltiesAgainst = 0;
         doc.penaltiesFor = 0;
+        doc.playerCount = 6;
+        doc.opposingPlayerCount = 6;
         events.push(doc);
       }
     }
