@@ -24,4 +24,6 @@ module.exports = {
   IndexId: 'CrawlerIndex',
   EventsTable: 'Events',
   SummariesTable: 'Summaries',
+  AllStarGameType: 'A',
+  PreSeasonGameType: 'PR',
 };

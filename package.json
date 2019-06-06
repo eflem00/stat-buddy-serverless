@@ -4,10 +4,13 @@
   "description": "Serverless Infrastructure for statbuddy.ca",
   "main": "handler.js",
   "scripts": {
-    "start": "serverless invoke -f crawl -l",
-    "start:dev": "serverless invoke local --function crawl",
+    "invoke:crawl": "serverless invoke -f crawl -l",
+    "invoke:export": "serverless invoke -f export -l",
+    "start:crawl": "serverless invoke local --function crawl",
+    "start:export": "serverless invoke local --function export",
     "deploy": "serverless deploy -v",
-    "deploy:f": "serverless deploy function -f crawl",
+    "deploy:crawl": "serverless deploy function -f crawl",
+    "deploy:export": "serverless deploy function -f export",
     "lint": "eslint ./src",
     "test": "jest --coverage",
     "test:watch": "jest --watchAll",
@@ -27,7 +30,7 @@
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.17.3",
     "jest": "^24.8.0",
-    "serverless-dynamodb-local": "^0.2.37",
-    "serverless-offline": "^3.8.3"
+    "serverless-dynamodb-local": "^0.2.38",
+    "serverless-offline": "^3.33.0"
   }
 }

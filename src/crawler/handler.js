@@ -21,69 +21,64 @@ module.exports.crawl = async () => {
     }).promise();
     const startIndex = moment(response.Item.startIndex);
 
-    // const startIndex = moment('2018-02-23'); // This one has an empty plays array
-
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
     // Get the games for the given startIndex
     const schedule = await request(`https://statsapi.web.nhl.com/api/v1/schedule?date=${startIndex.format('YYYY-MM-DD')}`);
     if (schedule.data.dates.length > 0) {
-      for (const index in schedule.data.dates[0].games) {
-        if (schedule.data.dates[0].games[index] !== undefined) {
-          const gamePk = schedule.data.dates[0].games[index].gamePk;
-          console.log(`Beginning game [${gamePk}]`);
+      const games = schedule.data.dates[0].games.filter(game => game.gameType !== constants.AllStarGameType && game.gameType !== constants.PreSeasonGameType);
+      for (let n = 0; n < games.length; n += 1) {
+        const gamePk = games[n].gamePk;
+        console.log(`Beginning game [${gamePk}]`);
 
-          // Fetch data
-          const gameEvents = await request(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/feed/live`);
-          const gameShifts = await request(`http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=${gamePk}`);
-          const gameSummaries = await request(`https://api.nhle.com/stats/rest/team?reportType=basic&isGame=true&reportName=teamsummary&cayenneExp=gameId=${gamePk}`);
+        // Fetch data
+        const gameEvents = await request(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/feed/live`);
+        const gameShifts = await request(`http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=${gamePk}`);
+        const gameSummaries = await request(`https://api.nhle.com/stats/rest/team?reportType=basic&isGame=true&reportName=teamsummary&cayenneExp=gameId=${gamePk}`);
 
-          // Check that the game state is final
-          if (gameEvents.data.gameData.status.abstractGameState !== 'Final') {
-            throw new Error('Game state not final yet');
-          }
-
-          // Parse data
-          let events = [];
-          let summaries = [];
-          if (gameEvents.data.liveData.plays.allPlays.length > 0) {
-            const gamePenalties = parsePenalties(gameEvents);
-            events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
-            summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
-          } else {
-            events = constructLivePlays(gamePk, gameEvents);
-            summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
-          }
-
-          // Write data
-          console.log(`Writting [${events.length}] events to db`);
-
-          if (events.length > 0) {
-            const promises = [];
-            for (let i = 0; i < events.length; i += 1) {
-              promises.push(ddb.put({
-                TableName: constants.EventsTable,
-                Item: events[i],
-              }).promise());
-            }
-            await Promise.all(promises);
-          }
-
-          console.log(`Writting [${summaries.length}] summaries to db`);
-
-          if (summaries.length > 0) {
-            const promises = [];
-            for (let i = 0; i < summaries.length; i += 1) {
-              promises.push(ddb.put({
-                TableName: constants.SummariesTable,
-                Item: summaries[i],
-              }).promise());
-            }
-            await Promise.all(promises);
-          }
-
-          console.log(`Finished game [${gamePk}]`);
+        // Check that the game state is final
+        if (gameEvents.data.gameData.status.abstractGameState !== 'Final') {
+          throw new Error('Game state not final yet');
         }
+
+        // Parse data
+        let events = [];
+        if (gameEvents.data.liveData.plays.allPlays.length > 0) {
+          const gamePenalties = parsePenalties(gameEvents);
+          events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
+        } else {
+          events = constructLivePlays(gamePk, gameEvents);
+        }
+        const summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
+
+        // Write data
+        console.log(`Writting [${events.length}] events to db`);
+
+        if (events.length > 0) {
+          const promises = [];
+          for (let i = 0; i < events.length; i += 1) {
+            promises.push(ddb.put({
+              TableName: constants.EventsTable,
+              Item: events[i],
+            }).promise());
+          }
+          await Promise.all(promises);
+        }
+
+        console.log(`Writting [${summaries.length}] summaries to db`);
+
+        if (summaries.length > 0) {
+          const promises = [];
+          for (let i = 0; i < summaries.length; i += 1) {
+            promises.push(ddb.put({
+              TableName: constants.SummariesTable,
+              Item: summaries[i],
+            }).promise());
+          }
+          await Promise.all(promises);
+        }
+
+        console.log(`Finished game [${gamePk}]`);
       }
     }
 
