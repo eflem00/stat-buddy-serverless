@@ -19,10 +19,6 @@
         "no-console": 0,
         "no-await-in-loop": 0,
         "prefer-destructuring" : 0,
-        "no-restricted-syntax": 0,
-        "arrow-body-style": 0,
-        "camelcase": 0,
-        "quote-props": 0,
-        "default-case": 0
+        "quote-props": 0
     }
 }

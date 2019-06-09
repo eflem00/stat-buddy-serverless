@@ -5,6 +5,7 @@ const parseLivePlays = require('./parseLivePlays');
 const constructLivePlays = require('./constructLivePlays');
 const parsePenalties = require('./parsePenalties');
 const parseBoxScores = require('./parseBoxScores');
+const parseGoaliePulls = require('./parseGoaliePulls');
 const constants = require('./constants');
 
 aws.config.update({ region: process.env.REGION });
@@ -20,6 +21,7 @@ module.exports.crawl = async () => {
       },
     }).promise();
     const startIndex = moment(response.Item.startIndex);
+    // const startIndex = moment('2018-12-06');
 
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
@@ -41,11 +43,16 @@ module.exports.crawl = async () => {
           throw new Error('Game state not final yet');
         }
 
+        if (gameShifts.data.data.length <= 0) {
+          throw new Error('Game shifts not found');
+        }
+
         // Parse data
         let events = [];
         if (gameEvents.data.liveData.plays.allPlays.length > 0) {
-          const gamePenalties = parsePenalties(gameEvents);
-          events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
+          const gamePenalties = parsePenalties(gameEvents, gameShifts);
+          const goaliePulls = parseGoaliePulls(gameEvents, gameShifts);
+          events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
         } else {
           events = constructLivePlays(gamePk, gameEvents);
         }

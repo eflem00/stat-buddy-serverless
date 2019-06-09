@@ -5,6 +5,7 @@ let gamePk;
 let gameEvents;
 let gameShifts;
 let gamePenalties;
+let goaliePulls;
 let awayTeamId;
 let homeTeamId;
 
@@ -53,11 +54,12 @@ describe('Test the parseLivePlays Method', () => {
       },
     };
     gamePenalties = [];
+    goaliePulls = [];
   });
 
   test.each([[undefined], [[]]])('Should return succesfully with empty plays', (players) => {
     gameEvents.data.liveData.plays.allPlays.push({ players });
-    expect(() => parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties)).not.toThrow();
+    expect(() => parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls)).not.toThrow();
   });
 
   test('Should handle play with undefined data', () => {
@@ -71,18 +73,26 @@ describe('Test the parseLivePlays Method', () => {
       ordinalNum: 'second',
       periodTime: '02:36',
       dateTime: '2018-01-01T18:46:36.233Z',
+      goals: {
+        away: 0,
+        home: 0,
+      },
     };
     const players = [{
       player: {
         id: '1',
       },
     }];
+    const team = {
+      id: awayTeamId,
+    };
     gameEvents.data.liveData.plays.allPlays = [{
       result,
       about,
       players,
+      team,
     }];
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
     expect(events.length).toEqual(1);
 
     const doc = events[0];
@@ -99,8 +109,8 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.dateTime).toEqual(about.dateTime);
     expect(doc.x).toEqual(undefined);
     expect(doc.y).toEqual(undefined);
-    expect(doc.teamId).toEqual(undefined);
-    expect(doc.teamStatus).toEqual(undefined);
+    expect(doc.teamId).toEqual(team.id);
+    expect(doc.teamStatus).toEqual(constants.Away);
   });
 
   test.each([[constants.Home], [constants.Away]])('Should check team status', (status) => {
@@ -119,6 +129,10 @@ describe('Test the parseLivePlays Method', () => {
       ordinalNum: 'second',
       periodTime: '02:36',
       dateTime: '2018-01-01T18:46:36.233Z',
+      goals: {
+        away: 0,
+        home: 0,
+      },
     };
     const team = {
       id: teamId,
@@ -140,7 +154,7 @@ describe('Test the parseLivePlays Method', () => {
       },
       players,
     }];
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
     expect(events.length).toEqual(1);
 
     const doc = events[0];
@@ -177,6 +191,7 @@ describe('Test the parseLivePlays Method', () => {
     [constants.Away, constants.Penalty, constants.PenaltyDrawn, constants.Home, 'Forward'],
     [constants.Away, constants.Goal, constants.Assist, constants.Away, 'Forward'],
     [constants.Away, constants.Goal, constants.GoalAllowed, constants.Home, constants.GoalieType],
+    [constants.Away, 'RANDOM', 'RANDOM', constants.Home, 'RANDOM'],
   ])('Should handle play with player data', (teamStatus, eventTypeId, secondEventTypeId, secondTeamStatus, secondaryPlayerType) => {
     const player1 = 666;
     const player2 = 555;
@@ -201,6 +216,10 @@ describe('Test the parseLivePlays Method', () => {
         periodType: 'regular',
         periodTime: '02:36',
         dateTime: '2018-01-01T18:46:36.233Z',
+        goals: {
+          away: 1,
+          home: 0,
+        },
       },
       coordinates: {},
       team: {
@@ -221,23 +240,33 @@ describe('Test the parseLivePlays Method', () => {
       ],
     }];
 
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
 
     expect(events.length).toEqual(2);
 
     let doc = events[0];
-    expect(doc.playerId).toEqual(player2);
-    expect(doc.handedness).toEqual('R');
-    expect(doc.teamId).toEqual(secondTeamId);
-    expect(doc.teamStatus).toEqual(secondTeamStatus);
-    expect(doc.eventTypeId).toEqual(secondEventTypeId);
-
-    doc = events[1];
+    expect(doc.eventTypeId).toEqual(eventTypeId);
     expect(doc.playerId).toEqual(player1);
     expect(doc.handedness).toEqual('L');
     expect(doc.teamId).toEqual(teamId);
     expect(doc.teamStatus).toEqual(teamStatus);
-    expect(doc.eventTypeId).toEqual(eventTypeId);
+    expect(doc.teamStrength).toEqual(5);
+    expect(doc.teamScore).toEqual(teamStatus === constants.Home ? 0 : 1);
+    expect(doc.opposingTeamId).not.toEqual(teamId);
+    expect(doc.opposingStrength).toEqual(5);
+    expect(doc.opposingTeamScore).toEqual(teamStatus === constants.Home ? 1 : 0);
+
+    doc = events[1];
+    expect(doc.eventTypeId).toEqual(secondEventTypeId);
+    expect(doc.playerId).toEqual(player2);
+    expect(doc.handedness).toEqual('R');
+    expect(doc.teamId).toEqual(secondTeamId);
+    expect(doc.teamStatus).toEqual(secondTeamStatus);
+    expect(doc.teamStrength).toEqual(5);
+    expect(doc.teamScore).toEqual(secondTeamStatus === constants.Home ? 0 : 1);
+    expect(doc.opposingTeamId).not.toEqual(secondTeamId);
+    expect(doc.opposingStrength).toEqual(5);
+    expect(doc.opposingTeamScore).toEqual(secondTeamStatus === constants.Home ? 1 : 0);
   });
 
   test('Should find players that were on the ice', () => {
@@ -257,6 +286,10 @@ describe('Test the parseLivePlays Method', () => {
         periodType: 'regular',
         periodTime: '02:36',
         dateTime: '2018-01-01T18:46:36.233Z',
+        goals: {
+          away: 0,
+          home: 0,
+        },
       },
       players: [{
         player: {
@@ -318,18 +351,17 @@ describe('Test the parseLivePlays Method', () => {
         teamId: 2,
       },
     ];
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
     expect(events.length).toEqual(1);
 
     const doc = events[0];
-    expect(doc.players.length).toEqual(2);
-    expect(doc.playerCount).toEqual(1);
-    expect(doc.opposingPlayerCount).toEqual(1);
+    expect(doc.players.length).toEqual(1);
+    expect(doc.opposingPlayers.length).toEqual(1);
 
     let playerId = doc.players[0];
     expect(playerId).toEqual(player1);
 
-    playerId = doc.players[1];
+    playerId = doc.opposingPlayers[0];
     expect(playerId).toEqual(newPlayer1);
   });
 
@@ -355,6 +387,10 @@ describe('Test the parseLivePlays Method', () => {
         periodType: 'regular',
         periodTime: '00:00',
         dateTime: '2018-01-01T18:46:36.233Z',
+        goals: {
+          away: 0,
+          home: 0,
+        },
       },
       players: [{
         player: {
@@ -374,6 +410,10 @@ describe('Test the parseLivePlays Method', () => {
         periodType: 'regular',
         periodTime: '20:00',
         dateTime: '2018-01-01T18:46:36.233Z',
+        goals: {
+          away: 0,
+          home: 0,
+        },
       },
       players: [{
         player: {
@@ -415,24 +455,23 @@ describe('Test the parseLivePlays Method', () => {
         teamId: 2,
       },
     ];
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
     expect(events.length).toEqual(2);
 
     let doc = events[0];
-    expect(doc.players.length).toEqual(2);
+    expect(doc.players.length).toEqual(1);
     expect(doc.players[0]).toEqual(player1);
-    expect(doc.players[1]).toEqual(newPlayer1);
-    expect(doc.playerCount).toEqual(1);
-    expect(doc.opposingPlayerCount).toEqual(1);
+    expect(doc.opposingPlayers.length).toEqual(1);
+    expect(doc.opposingPlayers[0]).toEqual(newPlayer1);
 
     doc = events[1];
-    expect(doc.players.length).toEqual(1);
-    expect(doc.players[0]).toEqual(newPlayer1);
-    expect(doc.playerCount).toEqual(0);
-    expect(doc.opposingPlayerCount).toEqual(1);
+    expect(doc.opposingPlayers.length).toEqual(1);
+    expect(doc.opposingPlayers[0]).toEqual(newPlayer1);
+    expect(doc.players.length).toEqual(0);
   });
 
-  test('Should determine strength of play', () => {
+  test.each([['R'], ['P']])('Should determine strength of play', (gameType) => {
+    gameEvents.data.gameData.game.type = gameType;
     gameEvents.data.liveData.plays.allPlays = [
       {
         result: {
@@ -442,6 +481,10 @@ describe('Test the parseLivePlays Method', () => {
           period: 1,
           periodType: 'regular',
           periodTime: '02:30',
+          goals: {
+            away: 0,
+            home: 0,
+          },
         },
         team: {
           id: 2,
@@ -460,6 +503,10 @@ describe('Test the parseLivePlays Method', () => {
           period: 1,
           periodType: 'regular',
           periodTime: '04:30',
+          goals: {
+            away: 0,
+            home: 0,
+          },
         },
         team: {
           id: 1,
@@ -478,6 +525,10 @@ describe('Test the parseLivePlays Method', () => {
           period: 1,
           periodType: 'regular',
           periodTime: '02:29',
+          goals: {
+            away: 0,
+            home: 0,
+          },
         },
         team: {
           id: 2,
@@ -496,6 +547,74 @@ describe('Test the parseLivePlays Method', () => {
           period: 1,
           periodType: 'regular',
           periodTime: '04:31',
+          goals: {
+            away: 0,
+            home: 0,
+          },
+        },
+        team: {
+          id: 2,
+        },
+        players: [{
+          player: {
+            id: 1,
+          },
+        }],
+      },
+      {
+        result: {
+          eventTypeId: 'notin3',
+        },
+        about: {
+          period: 1,
+          periodType: 'regular',
+          periodTime: '04:32',
+          goals: {
+            away: 0,
+            home: 0,
+          },
+        },
+        team: {
+          id: 1,
+        },
+        players: [{
+          player: {
+            id: 1,
+          },
+        }],
+      },
+      {
+        result: {
+          eventTypeId: 'in3',
+        },
+        about: {
+          period: 4,
+          periodTime: '02:31',
+          goals: {
+            away: 0,
+            home: 0,
+          },
+        },
+        team: {
+          id: 1,
+        },
+        players: [{
+          player: {
+            id: 1,
+          },
+        }],
+      },
+      {
+        result: {
+          eventTypeId: 'in4',
+        },
+        about: {
+          period: 4,
+          periodTime: '02:45',
+          goals: {
+            away: 0,
+            home: 0,
+          },
         },
         team: {
           id: 2,
@@ -519,25 +638,65 @@ describe('Test the parseLivePlays Method', () => {
         endTime: 165,
         teamId: 1,
       },
+      {
+        startTime: 3720,
+        endTime: 3840,
+        teamId: 1,
+      },
+      {
+        startTime: 3764,
+        endTime: 3800,
+        teamId: 2,
+      },
     ];
 
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties);
-    expect(events.length).toEqual(4);
+    goaliePulls = [
+      {
+        startTime: 271,
+        endTime: 280,
+        teamId: 1,
+      },
+    ];
+
+    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
+    expect(events.length).toEqual(7);
 
     let event = events.filter(x => x.eventTypeId === 'in1')[0];
-    expect(event.penaltiesFor).toEqual(1);
-    expect(event.penaltiesAgainst).toEqual(1);
+    expect(event.teamStrength).toEqual(4);
+    expect(event.opposingStrength).toEqual(4);
 
     event = events.filter(x => x.eventTypeId === 'in2')[0];
-    expect(event.penaltiesFor).toEqual(0);
-    expect(event.penaltiesAgainst).toEqual(1);
+    expect(event.teamStrength).toEqual(5);
+    expect(event.opposingStrength).toEqual(4);
 
     event = events.filter(x => x.eventTypeId === 'notin1')[0];
-    expect(event.penaltiesFor).toEqual(0);
-    expect(event.penaltiesAgainst).toEqual(1);
+    expect(event.teamStrength).toEqual(5);
+    expect(event.opposingStrength).toEqual(4);
 
     event = events.filter(x => x.eventTypeId === 'notin2')[0];
-    expect(event.penaltiesFor).toEqual(0);
-    expect(event.penaltiesAgainst).toEqual(0);
+    expect(event.teamStrength).toEqual(5);
+    expect(event.opposingStrength).toEqual(6);
+
+    event = events.filter(x => x.eventTypeId === 'notin3')[0];
+    expect(event.teamStrength).toEqual(6);
+    expect(event.opposingStrength).toEqual(5);
+
+    if (gameType === 'R') {
+      event = events.filter(x => x.eventTypeId === 'in3')[0];
+      expect(event.teamStrength).toEqual(3);
+      expect(event.opposingStrength).toEqual(4);
+
+      event = events.filter(x => x.eventTypeId === 'in4')[0];
+      expect(event.teamStrength).toEqual(4);
+      expect(event.opposingStrength).toEqual(4);
+    } else {
+      event = events.filter(x => x.eventTypeId === 'in3')[0];
+      expect(event.teamStrength).toEqual(4);
+      expect(event.opposingStrength).toEqual(5);
+
+      event = events.filter(x => x.eventTypeId === 'in4')[0];
+      expect(event.teamStrength).toEqual(4);
+      expect(event.opposingStrength).toEqual(4);
+    }
   });
 });

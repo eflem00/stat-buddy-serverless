@@ -18,10 +18,6 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/*"
-    - Effect: Allow
-      Action:
-        - s3:PutObject
-      Resource: "arn:aws:s3:::stat-buddy-exports/*"
 
 functions:
   crawl:
@@ -31,5 +27,4 @@ functions:
   export:
     handler: src/export/handler.export
     events:
-      - sns:
-          arn: arn:aws:sns:us-west-2:198547082312:ExportRequest
+      - schedule: cron(0/5 * * * ? *)

@@ -1,7 +1,7 @@
 const timeHelper = require('./timeHelper');
 const constants = require('./constants');
 
-module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties) {
+module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls) {
   const events = [];
 
   const gameData = {
@@ -12,13 +12,23 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
   };
 
   gameEvents.data.liveData.plays.allPlays.forEach((play) => {
-    if (play.players && play.players.length > 0) {
+    if (play.players && play.team && play.players.length > 0) {
       const doc = { ...gameData };
 
-      doc.playTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameData.gameType);
-      doc.periodType = play.about.periodType;
-      doc.dateTime = play.about.dateTime;
+      // Event data
       doc.eventTypeId = play.result.eventTypeId;
+      doc.dateTime = play.about.dateTime;
+      doc.playTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameData.gameType);
+
+      // Team data
+      const teamIsHome = play.team.id === gameEvents.data.gameData.teams.home.id;
+      doc.teamId = play.team.id;
+      doc.teamStatus = teamIsHome ? constants.Home : constants.Away;
+      doc.teamScore = teamIsHome ? play.about.goals.home : play.about.goals.away;
+      doc.opposingTeamId = teamIsHome ? gameEvents.data.gameData.teams.away.id : gameEvents.data.gameData.teams.home.id;
+      doc.opposingTeamScore = teamIsHome ? play.about.goals.away : play.about.goals.home;
+
+      // Additional info
       if (play.result.gameWinningGoal) {
         doc.gameWinningGoal = play.result.gameWinningGoal;
       }
@@ -36,60 +46,58 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
         doc.y = play.coordinates.y;
       }
 
-      if (play.team) {
-        doc.teamId = play.team.id;
-        doc.teamStatus = play.team.id === gameEvents.data.gameData.teams.home.id ? constants.Home : constants.Away;
-      }
-
-      const homeTeamId = gameEvents.data.gameData.teams.home.id;
-      const awayTeamId = gameEvents.data.gameData.teams.away.id;
-      const playIsHome = doc.teamStatus === constants.Home;
-
-      // TODO: Could be offsetting penalties?
-      doc.penaltiesFor = 0;
-      doc.penaltiesAgainst = 0;
-      gamePenalties.forEach((penalty) => {
-        if (doc.playTime >= penalty.startTime && doc.playTime <= penalty.endTime) {
-          if (penalty.teamId === doc.teamId) {
-            doc.penaltiesFor += 1;
-          } else {
-            doc.penaltiesAgainst += 1;
-          }
+      // Team strength
+      const fiveSkatersAllowed = doc.playTime < 3600 || doc.gameType === 'P';
+      doc.teamStrength = fiveSkatersAllowed ? 5 : 3;
+      doc.opposingStrength = fiveSkatersAllowed ? 5 : 3;
+      gamePenalties.filter(penalty => doc.playTime >= penalty.startTime && doc.playTime <= penalty.endTime).forEach((penalty) => {
+        if (fiveSkatersAllowed && penalty.teamId === doc.teamId && doc.teamStrength > 3) {
+          doc.teamStrength -= 1;
+        } else if (fiveSkatersAllowed && penalty.teamId !== doc.teamId && doc.opposingStrength > 3) {
+          doc.opposingStrength -= 1;
+        } else if (!fiveSkatersAllowed && penalty.teamId === doc.teamId && doc.opposingStrength < 5) {
+          doc.opposingStrength += 1;
+        } else if (!fiveSkatersAllowed && penalty.teamId !== doc.teamId && doc.teamStrength < 5) {
+          doc.teamStrength += 1;
+        }
+      });
+      goaliePulls.filter(goaliePull => doc.playTime >= goaliePull.startTime && doc.playTime <= goaliePull.endTime).forEach((goaliePull) => {
+        if (goaliePull.teamId === doc.teamId) {
+          doc.teamStrength += 1;
+        } else {
+          doc.opposingStrength += 1;
         }
       });
 
-      // Find players on the ice
-      // TODO: Play time in overtime
-      const players = new Set();
-      doc.playerCount = 0;
-      doc.opposingPlayerCount = 0;
+      // Players on ice
+      doc.players = [];
+      doc.opposingPlayers = [];
       gameShifts.data.data.forEach((gameShift) => {
         const startTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.startTime, gameData.gameType);
         const endTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.endTime, gameData.gameType);
         const playTime = doc.playTime;
 
         if (playTime % 1200 !== 0 && startTime < playTime && playTime <= endTime) {
-          players.add(gameShift.playerId);
           if (gameShift.teamId === doc.teamId) {
-            doc.playerCount += 1;
+            doc.players.push(gameShift.playerId);
           } else {
-            doc.opposingPlayerCount += 1;
+            doc.opposingPlayers.push(gameShift.playerId);
           }
         } else if (playTime % 1200 === 0 && gameShift.period === play.about.period && (startTime === playTime || playTime === endTime)) {
-          players.add(gameShift.playerId);
           if (gameShift.teamId === doc.teamId) {
-            doc.playerCount += 1;
+            doc.players.push(gameShift.playerId);
           } else {
-            doc.opposingPlayerCount += 1;
+            doc.opposingPlayers.push(gameShift.playerId);
           }
         }
       });
-      doc.players = Array.from(players);
 
-      // Parse the original players array and split into multiple docs
-      // Assign main player to main doc and create seconday doc
       doc.playerId = play.players[0].player.id;
       doc.handedness = gameEvents.data.gameData.players[`ID${doc.playerId}`].shootsCatches;
+
+      events.push(doc);
+
+      // Break multi-player events into individual events
       if (play.players.length > 1) {
         for (let i = 1; i < play.players.length; i += 1) {
           const newDoc = { ...doc };
@@ -97,53 +105,45 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
           newDoc.playerId = player.player.id;
           newDoc.handedness = gameEvents.data.gameData.players[`ID${newDoc.playerId}`].shootsCatches;
 
+          // reverse team info in these cases
+          if (doc.eventTypeId !== constants.Goal || (doc.eventTypeId === constants.Goal && player.playerType === constants.GoalieType)) {
+            newDoc.teamId = doc.opposingTeamId;
+            newDoc.teamStatus = doc.teamStatus === constants.Home ? constants.Away : constants.Home;
+            newDoc.teamStrength = doc.opposingStrength;
+            newDoc.teamScore = doc.opposingTeamScore;
+            newDoc.opposingTeamId = doc.teamId;
+            newDoc.opposingStrength = doc.teamStrength;
+            newDoc.opposingTeamScore = doc.teamScore;
+            newDoc.players = doc.opposingPlayers;
+            newDoc.opposingPlayers = doc.players;
+          }
+
           switch (doc.eventTypeId) {
             case constants.Hit:
               newDoc.eventTypeId = constants.Hittee;
-              newDoc.teamId = playIsHome ? awayTeamId : homeTeamId;
-              newDoc.teamStatus = playIsHome ? constants.Away : constants.Home;
-              events.push(newDoc);
               break;
             case constants.BlockedShot:
               newDoc.eventTypeId = constants.ShotBlocked;
-              newDoc.teamId = playIsHome ? awayTeamId : homeTeamId;
-              newDoc.teamStatus = playIsHome ? constants.Away : constants.Home;
-              events.push(newDoc);
               break;
             case constants.Shot:
               newDoc.eventTypeId = constants.Save;
-              newDoc.teamId = playIsHome ? awayTeamId : homeTeamId;
-              newDoc.teamStatus = playIsHome ? constants.Away : constants.Home;
-              events.push(newDoc);
               break;
             case constants.Faceoff:
               newDoc.eventTypeId = constants.FaceoffLoss;
-              newDoc.teamId = playIsHome ? awayTeamId : homeTeamId;
-              newDoc.teamStatus = playIsHome ? constants.Away : constants.Home;
-              events.push(newDoc);
               break;
             case constants.Penalty:
               newDoc.eventTypeId = constants.PenaltyDrawn;
-              newDoc.teamId = playIsHome ? awayTeamId : homeTeamId;
-              newDoc.teamStatus = playIsHome ? constants.Away : constants.Home;
-              events.push(newDoc);
               break;
             case constants.Goal:
-              if (player.playerType === constants.GoalieType) {
-                newDoc.eventTypeId = constants.GoalAllowed;
-                newDoc.teamId = playIsHome ? awayTeamId : homeTeamId;
-                newDoc.teamStatus = playIsHome ? constants.Away : constants.Home;
-              } else {
-                newDoc.eventTypeId = constants.Assist;
-                newDoc.teamId = playIsHome ? homeTeamId : awayTeamId;
-                newDoc.teamStatus = playIsHome ? constants.Home : constants.Away;
-              }
-              events.push(newDoc);
+              newDoc.eventTypeId = player.playerType === constants.GoalieType ? constants.GoalAllowed : constants.Assist;
+              break;
+            default:
               break;
           }
+
+          events.push(newDoc);
         }
       }
-      events.push(doc);
     }
   });
 
