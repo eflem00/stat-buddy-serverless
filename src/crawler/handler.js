@@ -21,7 +21,7 @@ module.exports.crawl = async () => {
       },
     }).promise();
     const startIndex = moment(response.Item.startIndex);
-    // const startIndex = moment('2018-02-17');
+    // const startIndex = moment('2018-02-23');
 
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 

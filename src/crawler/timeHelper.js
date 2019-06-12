@@ -1,10 +1,21 @@
 const constants = require('./constants');
 
 function timeToInt(time) {
-  const leadMinute = Number.parseInt(time[0], 10);
-  const smallMinute = Number.parseInt(time[1], 10);
-  const leadSecond = Number.parseInt(time[3], 10);
-  const smallSecond = Number.parseInt(time[4], 10);
+  let leadMinute;
+  let smallMinute;
+  let leadSecond;
+  let smallSecond;
+  if (time.length === 5) {
+    leadMinute = Number.parseInt(time[0], 10);
+    smallMinute = Number.parseInt(time[1], 10);
+    leadSecond = Number.parseInt(time[3], 10);
+    smallSecond = Number.parseInt(time[4], 10);
+  } else {
+    leadMinute = 0;
+    smallMinute = Number.parseInt(time[0], 10);
+    leadSecond = Number.parseInt(time[2], 10);
+    smallSecond = Number.parseInt(time[3], 10);
+  }
 
   return leadMinute * 600 + smallMinute * 60 + leadSecond * 10 + smallSecond;
 }
