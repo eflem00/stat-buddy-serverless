@@ -11,6 +11,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
     venue: gameEvents.data.gameData.venue.name,
   };
 
+  // Process plays
   gameEvents.data.liveData.plays.allPlays.forEach((play) => {
     if (play.players && play.team && play.players.length > 0) {
       const doc = { ...gameData };
@@ -29,19 +30,22 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       doc.opposingTeamScore = teamIsHome ? play.about.goals.away : play.about.goals.home;
 
       // Additional info
-      if (play.result.gameWinningGoal) {
+      if (play.result.gameWinningGoal !== undefined) {
         doc.gameWinningGoal = play.result.gameWinningGoal;
       }
-      if (play.result.secondaryType) {
+      if (play.result.emptyNet !== undefined) {
+        doc.emptyNet = play.result.emptyNet;
+      }
+      if (play.result.secondaryType !== undefined) {
         doc.secondaryType = play.result.secondaryType;
       }
-      if (play.result.penaltySeverity) {
+      if (play.result.penaltySeverity !== undefined) {
         doc.penaltySeverity = play.result.penaltySeverity;
       }
-      if (play.result.penaltyMinutes) {
+      if (play.result.penaltyMinutes !== undefined) {
         doc.penaltyMinutes = play.result.penaltyMinutes;
       }
-      if (play.coordinates && play.coordinates.x && play.coordinates.y) {
+      if (play.coordinates !== undefined && play.coordinates.x !== undefined && play.coordinates.y !== undefined) {
         doc.x = play.coordinates.x;
         doc.y = play.coordinates.y;
       }

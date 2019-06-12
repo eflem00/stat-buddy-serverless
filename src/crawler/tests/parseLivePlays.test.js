@@ -102,6 +102,7 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.venue).toEqual(gameData.venue.name);
     expect(doc.eventTypeId).toEqual(result.eventTypeId);
     expect(doc.gameWinningGoal).toEqual(undefined);
+    expect(doc.emptyNet).toEqual(undefined);
     expect(doc.penaltySeverity).toEqual(undefined);
     expect(doc.penaltyMinutes).toEqual(undefined);
     expect(doc.secondaryType).toEqual(undefined);
@@ -119,6 +120,7 @@ describe('Test the parseLivePlays Method', () => {
     const result = {
       eventTypeId: constants.Shot,
       gameWinningGoal: true,
+      emptyNet: false,
       secondaryType: 'Wrist Shot',
       penaltySeverity: 'Major',
       penaltyMinutes: 4,
@@ -164,6 +166,7 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.venue).toEqual(gameData.venue.name);
     expect(doc.eventTypeId).toEqual(result.eventTypeId);
     expect(doc.gameWinningGoal).toEqual(true);
+    expect(doc.emptyNet).toEqual(false);
     expect(doc.penaltySeverity).toEqual('Major');
     expect(doc.penaltyMinutes).toEqual(4);
     expect(doc.secondaryType).toEqual('Wrist Shot');

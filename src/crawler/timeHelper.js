@@ -1,9 +1,12 @@
-const moment = require('moment');
 const constants = require('./constants');
 
 function timeToInt(time) {
-  const momentTime = moment(time, 'mm:ss');
-  return (momentTime.minutes() * 60) + momentTime.seconds();
+  const leadMinute = Number.parseInt(time[0], 10);
+  const smallMinute = Number.parseInt(time[1], 10);
+  const leadSecond = Number.parseInt(time[3], 10);
+  const smallSecond = Number.parseInt(time[4], 10);
+
+  return leadMinute * 600 + smallMinute * 60 + leadSecond * 10 + smallSecond;
 }
 
 

@@ -21,7 +21,7 @@ module.exports.crawl = async () => {
       },
     }).promise();
     const startIndex = moment(response.Item.startIndex);
-    // const startIndex = moment('2018-12-06');
+    // const startIndex = moment('2018-02-17');
 
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
@@ -56,7 +56,7 @@ module.exports.crawl = async () => {
         } else {
           events = constructLivePlays(gamePk, gameEvents);
         }
-        const summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
+        const summaries = parseBoxScores(gamePk, gameEvents, gameSummaries, gameShifts);
 
         // Write data
         console.log(`Writting [${events.length}] events to db`);

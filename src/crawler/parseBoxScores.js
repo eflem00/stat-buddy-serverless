@@ -1,6 +1,7 @@
 const timeHelper = require('./timeHelper');
+const constants = require('./constants');
 
-function getTeamSummaries(gamePk, gameEvents, teamBoxscore, opposingTeamBoxscore, playerBoxscores) {
+function getTeamSummaries(gamePk, gameEvents, gameShifts, teamBoxscore, opposingTeamBoxscore, playerBoxscores) {
   const summaries = [];
 
   const teamSummary = {
@@ -20,24 +21,42 @@ function getTeamSummaries(gamePk, gameEvents, teamBoxscore, opposingTeamBoxscore
     soLoss: teamBoxscore.shootoutGamesLost,
     points: teamBoxscore.points,
   };
+
   summaries.push(teamSummary);
 
   Object.keys(playerBoxscores).forEach((key) => {
-    const playerId = playerBoxscores[key].person.id;
-    const player = playerBoxscores[key].stats.skaterStats;
-    const playerSummary = { ...teamSummary };
-    playerSummary.id = playerId;
-    playerSummary.timeOnIce = player !== undefined ? timeHelper.timeToInt(player.timeOnIce) : 0;
-    playerSummary.evenTimeOnIce = player !== undefined ? timeHelper.timeToInt(player.evenTimeOnIce) : 0;
-    playerSummary.powerPlayTimeOnIce = player !== undefined ? timeHelper.timeToInt(player.powerPlayTimeOnIce) : 0;
-    playerSummary.shortHandedTimeOnIce = player !== undefined ? timeHelper.timeToInt(player.shortHandedTimeOnIce) : 0;
-    summaries.push(playerSummary);
+    const player = playerBoxscores[key];
+
+    if (player.stats.skaterStats || player.stats.goalieStats) {
+      const playerSummary = { ...teamSummary };
+      playerSummary.teamId = playerSummary.id;
+      playerSummary.id = player.person.id;
+
+      if (player.position.type === constants.GoalieType) {
+        playerSummary.timeOnIce = timeHelper.timeToInt(player.stats.goalieStats.timeOnIce);
+        playerSummary.decision = player.stats.goalieStats.decision === '' ? constants.GoalieRelief : player.stats.goalieStats.decision;
+        playerSummary.started = false;
+        gameShifts.data.data.forEach((gameShift) => {
+          const startTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.startTime, gameEvents.data.gameData.game.type);
+          if (gameShift.playerId === player.person.id && startTime === 0) {
+            playerSummary.started = true;
+          }
+        });
+      } else {
+        playerSummary.timeOnIce = timeHelper.timeToInt(player.stats.skaterStats.timeOnIce);
+        playerSummary.evenTimeOnIce = timeHelper.timeToInt(player.stats.skaterStats.evenTimeOnIce);
+        playerSummary.powerPlayTimeOnIce = timeHelper.timeToInt(player.stats.skaterStats.powerPlayTimeOnIce);
+        playerSummary.shortHandedTimeOnIce = timeHelper.timeToInt(player.stats.skaterStats.shortHandedTimeOnIce);
+      }
+
+      summaries.push(playerSummary);
+    }
   });
 
   return summaries;
 }
 
-module.exports = function parseBoxScores(gamePk, gameEvents, gameSummaries) {
+module.exports = function parseBoxScores(gamePk, gameEvents, gameSummaries, gameShifts) {
   const firstTeamSummary = gameSummaries.data.data[0];
   const secondTeamSummary = gameSummaries.data.data[1];
   const firstTeamBoxscores = firstTeamSummary.teamId === gameEvents.data.liveData.boxscore.teams.away.team.id
@@ -50,6 +69,7 @@ module.exports = function parseBoxScores(gamePk, gameEvents, gameSummaries) {
   const firstSummaries = getTeamSummaries(
     gamePk,
     gameEvents,
+    gameShifts,
     firstTeamSummary,
     secondTeamSummary,
     firstTeamBoxscores,
@@ -58,6 +78,7 @@ module.exports = function parseBoxScores(gamePk, gameEvents, gameSummaries) {
   const secondSummaries = getTeamSummaries(
     gamePk,
     gameEvents,
+    gameShifts,
     secondTeamSummary,
     firstTeamSummary,
     secondTeamBoxscores,

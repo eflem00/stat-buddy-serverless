@@ -25,12 +25,43 @@ const gameEvents = {
                 person: {
                   id: 1,
                 },
+                position: {
+                  type: 'Forward',
+                },
                 stats: {
                   skaterStats: {
                     timeOnIce: '01:11',
                     evenTimeOnIce: '2:22',
                     powerPlayTimeOnIce: '3:33',
                     shortHandedTimeOnIce: '4:44',
+                  },
+                },
+              },
+              player4: {
+                person: {
+                  id: 4,
+                },
+                position: {
+                  type: 'Goalie',
+                },
+                stats: {
+                  goalieStats: {
+                    timeOnIce: '62:00',
+                    decision: 'W',
+                  },
+                },
+              },
+              player6: {
+                person: {
+                  id: 6,
+                },
+                position: {
+                  type: 'Goalie',
+                },
+                stats: {
+                  goalieStats: {
+                    timeOnIce: '01:00',
+                    decision: '',
                   },
                 },
               },
@@ -44,6 +75,9 @@ const gameEvents = {
               player2: {
                 person: {
                   id: 2,
+                },
+                position: {
+                  type: 'Forward',
                 },
                 stats: {
                   skaterStats: {
@@ -59,6 +93,20 @@ const gameEvents = {
                   id: 3,
                 },
                 stats: {},
+              },
+              player5: {
+                person: {
+                  id: 5,
+                },
+                position: {
+                  type: 'Goalie',
+                },
+                stats: {
+                  goalieStats: {
+                    timeOnIce: '63:00',
+                    decision: 'L',
+                  },
+                },
               },
             },
           },
@@ -97,12 +145,33 @@ const gameSummaries = {
     ],
   },
 };
+const gameShifts = {
+  data: {
+    data: [
+      {
+        period: 1,
+        startTime: '00:00',
+        playerId: 4,
+      },
+      {
+        period: 1,
+        startTime: '00:00',
+        playerId: 5,
+      },
+      {
+        period: 1,
+        startTime: '12:00',
+        playerId: 6,
+      },
+    ],
+  },
+};
 
 
 describe('Test the parseBoxScore Method', () => {
   test('Should handle basic data', () => {
-    const summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
-    expect(summaries.length).toEqual(5);
+    const summaries = parseBoxScores(gamePk, gameEvents, gameSummaries, gameShifts);
+    expect(summaries.length).toEqual(7);
 
     const firstTeamSummary = summaries[0];
     expect(firstTeamSummary.id).toEqual(gameSummaries.data.data[0].teamId);
@@ -143,7 +212,49 @@ describe('Test the parseBoxScore Method', () => {
     expect(firstPlayerSummary.soLoss).toEqual(gameSummaries.data.data[0].shootoutGamesLost);
     expect(firstPlayerSummary.points).toEqual(gameSummaries.data.data[0].points);
 
-    const secondTeamSummary = summaries[2];
+    const firstGoalieSummary = summaries[2];
+    const firstGoalieInfo = gameEvents.data.liveData.boxscore.teams.away.players.player4;
+    expect(firstGoalieSummary.id).toEqual(firstGoalieInfo.person.id);
+    expect(firstGoalieSummary.timeOnIce).toEqual(timeHelper.timeToInt(firstGoalieInfo.stats.goalieStats.timeOnIce));
+    expect(firstGoalieSummary.decision).toEqual('W');
+    expect(firstGoalieSummary.started).toEqual(true);
+    expect(firstGoalieSummary.dateTime).toEqual(gameSummaries.data.data[0].gameDate);
+    expect(firstGoalieSummary.gamePk).toEqual(gameSummaries.data.data[0].gameId);
+    expect(firstGoalieSummary.gameType).toEqual(gameEvents.data.gameData.game.type);
+    expect(firstGoalieSummary.gameSeason).toEqual(parseInt(gameEvents.data.gameData.game.season, 10));
+    expect(firstGoalieSummary.venue).toEqual(gameEvents.data.gameData.venue.name);
+    expect(firstGoalieSummary.opposingTeamId).toEqual(gameSummaries.data.data[1].teamId);
+    expect(firstGoalieSummary.win).toEqual(gameSummaries.data.data[1].losses);
+    expect(firstGoalieSummary.tie).toEqual(gameSummaries.data.data[0].ties);
+    expect(firstGoalieSummary.loss).toEqual(gameSummaries.data.data[0].losses);
+    expect(firstGoalieSummary.otWin).toEqual(gameSummaries.data.data[1].otLosses);
+    expect(firstGoalieSummary.otLoss).toEqual(gameSummaries.data.data[0].otLosses);
+    expect(firstGoalieSummary.soWin).toEqual(gameSummaries.data.data[0].shootoutGamesWon);
+    expect(firstGoalieSummary.soLoss).toEqual(gameSummaries.data.data[0].shootoutGamesLost);
+    expect(firstGoalieSummary.points).toEqual(gameSummaries.data.data[0].points);
+
+    const secondGoalieSummary = summaries[3];
+    const secondGoalieInfo = gameEvents.data.liveData.boxscore.teams.away.players.player6;
+    expect(secondGoalieSummary.id).toEqual(secondGoalieInfo.person.id);
+    expect(secondGoalieSummary.timeOnIce).toEqual(timeHelper.timeToInt(secondGoalieInfo.stats.goalieStats.timeOnIce));
+    expect(secondGoalieSummary.decision).toEqual('X');
+    expect(secondGoalieSummary.started).toEqual(false);
+    expect(secondGoalieSummary.dateTime).toEqual(gameSummaries.data.data[0].gameDate);
+    expect(secondGoalieSummary.gamePk).toEqual(gameSummaries.data.data[0].gameId);
+    expect(secondGoalieSummary.gameType).toEqual(gameEvents.data.gameData.game.type);
+    expect(secondGoalieSummary.gameSeason).toEqual(parseInt(gameEvents.data.gameData.game.season, 10));
+    expect(secondGoalieSummary.venue).toEqual(gameEvents.data.gameData.venue.name);
+    expect(secondGoalieSummary.opposingTeamId).toEqual(gameSummaries.data.data[1].teamId);
+    expect(secondGoalieSummary.win).toEqual(gameSummaries.data.data[1].losses);
+    expect(secondGoalieSummary.tie).toEqual(gameSummaries.data.data[0].ties);
+    expect(secondGoalieSummary.loss).toEqual(gameSummaries.data.data[0].losses);
+    expect(secondGoalieSummary.otWin).toEqual(gameSummaries.data.data[1].otLosses);
+    expect(secondGoalieSummary.otLoss).toEqual(gameSummaries.data.data[0].otLosses);
+    expect(secondGoalieSummary.soWin).toEqual(gameSummaries.data.data[0].shootoutGamesWon);
+    expect(secondGoalieSummary.soLoss).toEqual(gameSummaries.data.data[0].shootoutGamesLost);
+    expect(secondGoalieSummary.points).toEqual(gameSummaries.data.data[0].points);
+
+    const secondTeamSummary = summaries[4];
     expect(secondTeamSummary.id).toEqual(gameSummaries.data.data[1].teamId);
     expect(secondTeamSummary.dateTime).toEqual(gameSummaries.data.data[1].gameDate);
     expect(secondTeamSummary.gamePk).toEqual(gameSummaries.data.data[1].gameId);
@@ -160,7 +271,7 @@ describe('Test the parseBoxScore Method', () => {
     expect(secondTeamSummary.soLoss).toEqual(gameSummaries.data.data[1].shootoutGamesLost);
     expect(secondTeamSummary.points).toEqual(gameSummaries.data.data[1].points);
 
-    const secondPlayerSummary = summaries[3];
+    const secondPlayerSummary = summaries[5];
     const secondPlayerInfo = gameEvents.data.liveData.boxscore.teams.home.players.player2;
     expect(secondPlayerSummary.id).toEqual(secondPlayerInfo.person.id);
     expect(secondPlayerSummary.timeOnIce).toEqual(timeHelper.timeToInt(secondPlayerInfo.stats.skaterStats.timeOnIce));
@@ -182,33 +293,32 @@ describe('Test the parseBoxScore Method', () => {
     expect(secondPlayerSummary.soLoss).toEqual(gameSummaries.data.data[1].shootoutGamesLost);
     expect(secondPlayerSummary.points).toEqual(gameSummaries.data.data[1].points);
 
-    const thirdPlayerSummary = summaries[4];
-    const thirdPlayerInfo = gameEvents.data.liveData.boxscore.teams.home.players.player3;
-    expect(thirdPlayerSummary.id).toEqual(thirdPlayerInfo.person.id);
-    expect(thirdPlayerSummary.timeOnIce).toEqual(0);
-    expect(thirdPlayerSummary.evenTimeOnIce).toEqual(0);
-    expect(thirdPlayerSummary.powerPlayTimeOnIce).toEqual(0);
-    expect(thirdPlayerSummary.shortHandedTimeOnIce).toEqual(0);
-    expect(thirdPlayerSummary.dateTime).toEqual(gameSummaries.data.data[1].gameDate);
-    expect(thirdPlayerSummary.gamePk).toEqual(gameSummaries.data.data[1].gameId);
-    expect(thirdPlayerSummary.gameType).toEqual(gameEvents.data.gameData.game.type);
-    expect(thirdPlayerSummary.gameSeason).toEqual(parseInt(gameEvents.data.gameData.game.season, 10));
-    expect(thirdPlayerSummary.venue).toEqual(gameEvents.data.gameData.venue.name);
-    expect(thirdPlayerSummary.opposingTeamId).toEqual(gameSummaries.data.data[0].teamId);
-    expect(thirdPlayerSummary.win).toEqual(gameSummaries.data.data[0].losses);
-    expect(thirdPlayerSummary.tie).toEqual(gameSummaries.data.data[1].ties);
-    expect(thirdPlayerSummary.loss).toEqual(gameSummaries.data.data[1].losses);
-    expect(thirdPlayerSummary.otWin).toEqual(gameSummaries.data.data[0].otLosses);
-    expect(thirdPlayerSummary.otLoss).toEqual(gameSummaries.data.data[1].otLosses);
-    expect(thirdPlayerSummary.soWin).toEqual(gameSummaries.data.data[1].shootoutGamesWon);
-    expect(thirdPlayerSummary.soLoss).toEqual(gameSummaries.data.data[1].shootoutGamesLost);
-    expect(thirdPlayerSummary.points).toEqual(gameSummaries.data.data[1].points);
+    const thirdGoalieSummary = summaries[6];
+    const thirdGoalieInfo = gameEvents.data.liveData.boxscore.teams.home.players.player5;
+    expect(thirdGoalieSummary.id).toEqual(thirdGoalieInfo.person.id);
+    expect(thirdGoalieSummary.timeOnIce).toEqual(timeHelper.timeToInt(thirdGoalieInfo.stats.goalieStats.timeOnIce));
+    expect(thirdGoalieSummary.decision).toEqual('L');
+    expect(thirdGoalieSummary.started).toEqual(true);
+    expect(thirdGoalieSummary.dateTime).toEqual(gameSummaries.data.data[1].gameDate);
+    expect(thirdGoalieSummary.gamePk).toEqual(gameSummaries.data.data[1].gameId);
+    expect(thirdGoalieSummary.gameType).toEqual(gameEvents.data.gameData.game.type);
+    expect(thirdGoalieSummary.gameSeason).toEqual(parseInt(gameEvents.data.gameData.game.season, 10));
+    expect(thirdGoalieSummary.venue).toEqual(gameEvents.data.gameData.venue.name);
+    expect(thirdGoalieSummary.opposingTeamId).toEqual(gameSummaries.data.data[0].teamId);
+    expect(thirdGoalieSummary.win).toEqual(gameSummaries.data.data[0].losses);
+    expect(thirdGoalieSummary.tie).toEqual(gameSummaries.data.data[1].ties);
+    expect(thirdGoalieSummary.loss).toEqual(gameSummaries.data.data[1].losses);
+    expect(thirdGoalieSummary.otWin).toEqual(gameSummaries.data.data[0].otLosses);
+    expect(thirdGoalieSummary.otLoss).toEqual(gameSummaries.data.data[1].otLosses);
+    expect(thirdGoalieSummary.soWin).toEqual(gameSummaries.data.data[1].shootoutGamesWon);
+    expect(thirdGoalieSummary.soLoss).toEqual(gameSummaries.data.data[1].shootoutGamesLost);
+    expect(thirdGoalieSummary.points).toEqual(gameSummaries.data.data[1].points);
   });
 
   test('Should handle team ids swapped', () => {
     gameSummaries.data.data[0].teamId = 2;
     gameSummaries.data.data[1].teamId = 1;
-    const summaries = parseBoxScores(gamePk, gameEvents, gameSummaries);
-    expect(summaries.length).toEqual(5);
+    const summaries = parseBoxScores(gamePk, gameEvents, gameSummaries, gameShifts);
+    expect(summaries.length).toEqual(7);
   });
 });

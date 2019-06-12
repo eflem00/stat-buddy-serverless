@@ -19,5 +19,8 @@ describe('Test the getTotalSeconds Method', () => {
 
     seconds = timeHelper.timeToInt('12:34');
     expect(seconds).toEqual(754);
+
+    seconds = timeHelper.timeToInt('60:00');
+    expect(seconds).toEqual(3600);
   });
 });
