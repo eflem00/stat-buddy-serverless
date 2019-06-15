@@ -4,13 +4,13 @@
   "description": "Serverless Infrastructure for statbuddy.ca",
   "main": "handler.js",
   "scripts": {
-    "invoke:crawl": "serverless invoke -f crawl -l",
-    "invoke:export": "serverless invoke -f export -l",
-    "start:crawl": "serverless invoke local --function crawl",
-    "start:export": "serverless invoke local --function export",
+    "local:events": "serverless invoke local --function events",
+    "local:profiles": "serverless invoke local --function profiles",
+    "remote:events": "serverless invoke -f events -l",
+    "remote:profiles": "serverless invoke -f profiles -l",
     "deploy": "serverless deploy -v",
-    "deploy:crawl": "serverless deploy function -f crawl",
-    "deploy:export": "serverless deploy function -f export",
+    "deploy:events": "serverless deploy function -f events",
+    "deploy:profiles": "serverless deploy function -f profiles",
     "lint": "eslint ./src",
     "test": "jest --coverage",
     "test:watch": "jest --watchAll",
@@ -19,9 +19,10 @@
   "author": "Evan Fleming",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.462.0",
     "axios": "^0.18.0",
-    "moment": "^2.24.0"
+    "dotenv": "^8.0.0",
+    "moment": "^2.24.0",
+    "mongoose": "^5.6.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -29,8 +30,6 @@
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.17.3",
-    "jest": "^24.8.0",
-    "serverless-dynamodb-local": "^0.2.38",
-    "serverless-offline": "^3.33.0"
+    "jest": "^24.8.0"
   }
 }

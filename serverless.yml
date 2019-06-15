@@ -8,23 +8,13 @@ provider:
   stage: prod
   environment:
     REGION: ${self:provider.region}
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:us-west-2:198547082312:table/*"
 
 functions:
-  crawl:
-    handler: src/crawler/handler.crawl
+  events:
+    handler: src/events/handler.crawl
     events:
       - schedule: cron(0/5 * * * ? *)
-  export:
-    handler: src/export/handler.export
+  profiles:
+    handler: src/profiles/handler.crawl
     events:
       - schedule: cron(0/5 * * * ? *)
