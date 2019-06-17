@@ -11,24 +11,19 @@ const dbHelper = require('../common/db');
 
 module.exports.crawl = async () => {
   try {
-    // Load local env vars
     if (process.env.NODE_ENV !== 'production') {
       dotenv.config();
     }
 
-    // Establish db connect and models
+    // Establish db connection and models
     const db = await dbHelper.connect();
-    const Event = dbHelper.event(db);
+    const Events = dbHelper.events(db);
+    const Indexes = dbHelper.indexes(db);
+    const Summaries = dbHelper.summaries(db);
 
-    // Get the start index
-    // const response = await ddb.get({
-    //   TableName: constants.IndexesTable,
-    //   Key: {
-    //     id: constants.IndexId,
-    //   },
-    // }).promise();
-    // const startIndex = moment(response.Item.startIndex);
-    const startIndex = moment('2018-02-23');
+    const eventsIndex = await Indexes.findById('EventsIndex');
+    const startIndex = moment(eventsIndex.index);
+    // const startIndex = moment('2018-02-23');
 
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
@@ -45,7 +40,7 @@ module.exports.crawl = async () => {
         const gameShifts = await request(`http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=${gamePk}`);
         const gameSummaries = await request(`https://api.nhle.com/stats/rest/team?reportType=basic&isGame=true&reportName=teamsummary&cayenneExp=gameId=${gamePk}`);
 
-        // Check that the game state is final
+        // Validate data
         if (gameEvents.data.gameData.status.abstractGameState !== 'Final') {
           throw new Error('Game state not final yet');
         }
@@ -67,34 +62,18 @@ module.exports.crawl = async () => {
 
         // Write data
         console.log(`Writting [${events.length}] events to db`);
-
-        await Event.insertMany(events);
+        await Events.insertMany(events);
 
         console.log(`Writting [${summaries.length}] summaries to db`);
-
-        // if (summaries.length > 0) {
-        //   const promises = [];
-        //   for (let i = 0; i < summaries.length; i += 1) {
-        //     promises.push(ddb.put({
-        //       TableName: constants.SummariesTable,
-        //       Item: summaries[i],
-        //     }).promise());
-        //   }
-        //   await Promise.all(promises);
-        // }
+        await Summaries.insertMany(summaries);
 
         console.log(`Finished game [${gamePk}]`);
       }
     }
 
     // Increment and save the new startIndex
-    // await ddb.put({
-    //   TableName: constants.IndexesTable,
-    //   Item: {
-    //     id: constants.IndexId,
-    //     startIndex: startIndex.add(1, 'days').format('YYYY-MM-DD'),
-    //   },
-    // }).promise();
+    eventsIndex.index = startIndex.add(1, 'days').format('YYYY-MM-DD');
+    await eventsIndex.save();
 
     console.log('Finished crawling for date: ', startIndex.subtract(1, 'days').format('YYYY-MM-DD'));
   } catch (ex) {

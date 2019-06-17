@@ -1,3 +1,4 @@
+const moment = require('moment');
 const timeHelper = require('./timeHelper');
 const constants = require('./constants');
 
@@ -18,8 +19,14 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
 
       // Event data
       doc.eventTypeId = play.result.eventTypeId;
-      doc.dateTime = play.about.dateTime;
       doc.playTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameData.gameType);
+
+      // _id is a composite key of playerId and dateTime
+      const playerId = play.players[0].player.id;
+      const dateTime = moment(play.about.dateTime).add(Math.floor(Math.random() * Math.floor(100)), 'ms').toDate(); // Add random amount of seconds to dedupe keys. It is acceptible to lose some seconds of precision on these times
+      doc._id = { playerId, dateTime };
+      doc.handedness = gameEvents.data.gameData.players[`ID${playerId}`].shootsCatches;
+
 
       // Team data
       const teamIsHome = play.team.id === gameEvents.data.gameData.teams.home.id;
@@ -96,21 +103,19 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
         }
       });
 
-      doc.playerId = play.players[0].player.id;
-      doc.handedness = gameEvents.data.gameData.players[`ID${doc.playerId}`].shootsCatches;
-
       events.push(doc);
 
       // Break multi-player events into individual events
       if (play.players.length > 1) {
         for (let i = 1; i < play.players.length; i += 1) {
           const newDoc = { ...doc };
-          const player = play.players[i];
-          newDoc.playerId = player.player.id;
-          newDoc.handedness = gameEvents.data.gameData.players[`ID${newDoc.playerId}`].shootsCatches;
+          const newPlayer = play.players[i];
+          const newPlayerId = newPlayer.player.id;
+          newDoc._id = { playerId: newPlayerId, dateTime };
+          newDoc.handedness = gameEvents.data.gameData.players[`ID${newPlayerId}`].shootsCatches;
 
           // reverse team info in these cases
-          if (doc.eventTypeId !== constants.Goal || (doc.eventTypeId === constants.Goal && player.playerType === constants.GoalieType)) {
+          if (doc.eventTypeId !== constants.Goal || (doc.eventTypeId === constants.Goal && newPlayer.playerType === constants.GoalieType)) {
             newDoc.teamId = doc.opposingTeamId;
             newDoc.teamStatus = doc.teamStatus === constants.Home ? constants.Away : constants.Home;
             newDoc.teamStrength = doc.opposingStrength;
@@ -139,7 +144,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
               newDoc.eventTypeId = constants.PenaltyDrawn;
               break;
             case constants.Goal:
-              newDoc.eventTypeId = player.playerType === constants.GoalieType ? constants.GoalAllowed : constants.Assist;
+              newDoc.eventTypeId = newPlayer.playerType === constants.GoalieType ? constants.GoalAllowed : constants.Assist;
               break;
             default:
               break;

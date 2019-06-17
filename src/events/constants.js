@@ -25,8 +25,4 @@ module.exports = {
   PlayoffGameType: 'P',
   AllStarGameType: 'A',
   PreSeasonGameType: 'PR',
-  IndexesTable: 'Indexes',
-  IndexId: 'CrawlerIndex',
-  EventsTable: 'Events',
-  SummariesTable: 'Summaries',
 };
