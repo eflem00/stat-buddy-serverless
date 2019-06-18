@@ -18,11 +18,8 @@ module.exports.events = (db) => {
   const Schema = mongoose.Schema;
 
   const Event = new Schema({
-    _id: { type: Object },
+    playerId: { type: Number },
     gamePk: { type: Number },
-    gameType: { type: String },
-    gameSeason: { type: Number },
-    venue: { type: String },
     eventTypeId: { type: String },
     dateTime: { type: Date },
     playTime: { type: Number },
@@ -37,8 +34,12 @@ module.exports.events = (db) => {
     opposingStrength: { type: Number },
     players: { type: Array },
     opposingPlayers: { type: Array },
-    playerId: { type: Number },
     handedness: { type: String },
+    gameWinningGoal: { type: Boolean },
+    emptyNet: { type: Boolean },
+    secondaryType: { type: String },
+    penaltySeverity: { type: String },
+    penaltyMinutes: { type: Number },
   });
 
   let events;
@@ -73,11 +74,9 @@ module.exports.summaries = (db) => {
   const Schema = mongoose.Schema;
 
   const Summary = new Schema({
-    _id: { type: Object },
+    _id: { type: Number },
     dateTime: { type: Date },
     gamePk: { type: Number },
-    gameType: { type: String },
-    gameSeason: { type: Number },
     venue: { type: String },
     opposingTeamId: { type: Number },
     win: { type: Number },
@@ -93,6 +92,8 @@ module.exports.summaries = (db) => {
     evenTimeOnIce: { type: Number },
     powerPlayTimeOnIce: { type: Number },
     shortHandedTimeOnIce: { type: Number },
+    decision: { type: String },
+    started: { type: Boolean },
   });
 
   let summaries;

@@ -63,7 +63,6 @@ describe('Test the parseLivePlays Method', () => {
   });
 
   test('Should handle play with undefined data', () => {
-    const gameData = gameEvents.data.gameData;
     const result = {
       eventTypeId: 'kappa',
     };
@@ -97,9 +96,6 @@ describe('Test the parseLivePlays Method', () => {
 
     const doc = events[0];
     expect(doc.gamePk).toEqual(gamePk);
-    expect(doc.gameType).toEqual(gameData.game.type);
-    expect(doc.gameSeason).toEqual(parseInt(gameData.game.season, 10));
-    expect(doc.venue).toEqual(gameData.venue.name);
     expect(doc.eventTypeId).toEqual(result.eventTypeId);
     expect(doc.gameWinningGoal).toEqual(undefined);
     expect(doc.emptyNet).toEqual(undefined);
@@ -107,7 +103,7 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.penaltyMinutes).toEqual(undefined);
     expect(doc.secondaryType).toEqual(undefined);
     expect(doc.playTime).toEqual(1356);
-    expect(doc._id.dateTime).toBeDefined();
+    expect(doc.dateTime).toEqual(new Date(about.dateTime));
     expect(doc.x).toEqual(undefined);
     expect(doc.y).toEqual(undefined);
     expect(doc.teamId).toEqual(team.id);
@@ -115,7 +111,6 @@ describe('Test the parseLivePlays Method', () => {
   });
 
   test.each([[constants.Home], [constants.Away]])('Should check team status', (status) => {
-    const gameData = gameEvents.data.gameData;
     const teamId = status === constants.Home ? homeTeamId : awayTeamId;
     const result = {
       eventTypeId: constants.Shot,
@@ -161,9 +156,6 @@ describe('Test the parseLivePlays Method', () => {
 
     const doc = events[0];
     expect(doc.gamePk).toEqual(gamePk);
-    expect(doc.gameType).toEqual(gameData.game.type);
-    expect(doc.gameSeason).toEqual(parseInt(gameData.game.season, 10));
-    expect(doc.venue).toEqual(gameData.venue.name);
     expect(doc.eventTypeId).toEqual(result.eventTypeId);
     expect(doc.gameWinningGoal).toEqual(true);
     expect(doc.emptyNet).toEqual(false);
@@ -171,7 +163,7 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.penaltyMinutes).toEqual(4);
     expect(doc.secondaryType).toEqual('Wrist Shot');
     expect(doc.playTime).toEqual(156);
-    expect(doc._id.dateTime).toBeDefined();
+    expect(doc.dateTime).toEqual(new Date(about.dateTime));
     expect(doc.x).toEqual(x);
     expect(doc.y).toEqual(y);
 
@@ -249,7 +241,7 @@ describe('Test the parseLivePlays Method', () => {
 
     let doc = events[0];
     expect(doc.eventTypeId).toEqual(eventTypeId);
-    expect(doc._id.playerId).toEqual(player1);
+    expect(doc.playerId).toEqual(player1);
     expect(doc.handedness).toEqual('L');
     expect(doc.teamId).toEqual(teamId);
     expect(doc.teamStatus).toEqual(teamStatus);
@@ -261,7 +253,7 @@ describe('Test the parseLivePlays Method', () => {
 
     doc = events[1];
     expect(doc.eventTypeId).toEqual(secondEventTypeId);
-    expect(doc._id.playerId).toEqual(player2);
+    expect(doc.playerId).toEqual(player2);
     expect(doc.handedness).toEqual('R');
     expect(doc.teamId).toEqual(secondTeamId);
     expect(doc.teamStatus).toEqual(secondTeamStatus);

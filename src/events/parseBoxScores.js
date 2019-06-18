@@ -5,13 +5,9 @@ function getTeamSummaries(gamePk, gameEvents, gameShifts, teamBoxscore, opposing
   const summaries = [];
 
   const teamSummary = {
-    _id: {
-      id: teamBoxscore.teamId,
-      dateTime: new Date(teamBoxscore.gameDate),
-    },
+    _id: teamBoxscore.teamId,
+    dateTime: new Date(teamBoxscore.gameDate),
     gamePk,
-    gameType: gameEvents.data.gameData.game.type,
-    gameSeason: parseInt(gameEvents.data.gameData.game.season, 10),
     venue: gameEvents.data.gameData.venue.name,
     opposingTeamId: opposingTeamBoxscore.teamId,
     win: opposingTeamBoxscore.losses,
@@ -31,11 +27,8 @@ function getTeamSummaries(gamePk, gameEvents, gameShifts, teamBoxscore, opposing
 
     if (player.stats.skaterStats || player.stats.goalieStats) {
       const playerSummary = { ...teamSummary };
-      playerSummary.teamId = playerSummary._id.id;
-      playerSummary._id = {
-        id: player.person.id,
-        dateTime: new Date(teamBoxscore.gameDate),
-      };
+      playerSummary.teamId = playerSummary._id;
+      playerSummary._id = player.person.id;
 
       if (player.position.type === constants.GoalieType) {
         playerSummary.timeOnIce = timeHelper.timeToInt(player.stats.goalieStats.timeOnIce);

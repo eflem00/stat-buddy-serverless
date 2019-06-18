@@ -156,9 +156,6 @@ describe('Test the constructLivePlays', () => {
 
     const event = events[0];
     expect(event.gamePk).toEqual(gamePk);
-    expect(event.gameType).toEqual(gameEvents.data.gameData.game.type);
-    expect(event.gameSeason).toEqual(parseInt(gameEvents.data.gameData.game.season, 10));
-    expect(event.venue).toEqual(gameEvents.data.gameData.venue.name);
     expect(event.dateTime).toEqual(gameEvents.data.gameData.datetime.dateTime);
 
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal).length).toEqual(3);

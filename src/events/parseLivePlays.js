@@ -1,32 +1,22 @@
-const moment = require('moment');
 const timeHelper = require('./timeHelper');
 const constants = require('./constants');
 
 module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls) {
   const events = [];
 
-  const gameData = {
-    gamePk,
-    gameType: gameEvents.data.gameData.game.type,
-    gameSeason: parseInt(gameEvents.data.gameData.game.season, 10),
-    venue: gameEvents.data.gameData.venue.name,
-  };
-
   // Process plays
   gameEvents.data.liveData.plays.allPlays.forEach((play) => {
     if (play.players && play.team && play.players.length > 0) {
-      const doc = { ...gameData };
+      const doc = { gamePk };
 
-      // Event data
-      doc.eventTypeId = play.result.eventTypeId;
-      doc.playTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameData.gameType);
-
-      // _id is a composite key of playerId and dateTime
       const playerId = play.players[0].player.id;
-      const dateTime = moment(play.about.dateTime).add(Math.floor(Math.random() * Math.floor(100)), 'ms').toDate(); // Add random amount of seconds to dedupe keys. It is acceptible to lose some seconds of precision on these times
-      doc._id = { playerId, dateTime };
+      doc.playerId = playerId;
       doc.handedness = gameEvents.data.gameData.players[`ID${playerId}`].shootsCatches;
 
+      // Event data
+      doc.dateTime = new Date(play.about.dateTime);
+      doc.eventTypeId = play.result.eventTypeId;
+      doc.playTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameEvents.data.gameData.game.type);
 
       // Team data
       const teamIsHome = play.team.id === gameEvents.data.gameData.teams.home.id;
@@ -58,7 +48,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       }
 
       // Team strength
-      const fiveSkatersAllowed = doc.playTime < 3600 || doc.gameType === 'P';
+      const fiveSkatersAllowed = doc.playTime < 3600 || gameEvents.data.gameData.game.type === 'P';
       doc.teamStrength = fiveSkatersAllowed ? 5 : 3;
       doc.opposingStrength = fiveSkatersAllowed ? 5 : 3;
       gamePenalties.filter(penalty => doc.playTime >= penalty.startTime && doc.playTime <= penalty.endTime).forEach((penalty) => {
@@ -84,8 +74,8 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       doc.players = [];
       doc.opposingPlayers = [];
       gameShifts.data.data.forEach((gameShift) => {
-        const startTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.startTime, gameData.gameType);
-        const endTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.endTime, gameData.gameType);
+        const startTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.startTime, gameEvents.data.gameData.game.type);
+        const endTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.endTime, gameEvents.data.gameData.game.type);
         const playTime = doc.playTime;
 
         if (playTime % 1200 !== 0 && startTime < playTime && playTime <= endTime) {
@@ -111,7 +101,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
           const newDoc = { ...doc };
           const newPlayer = play.players[i];
           const newPlayerId = newPlayer.player.id;
-          newDoc._id = { playerId: newPlayerId, dateTime };
+          newDoc.playerId = newPlayerId;
           newDoc.handedness = gameEvents.data.gameData.players[`ID${newPlayerId}`].shootsCatches;
 
           // reverse team info in these cases

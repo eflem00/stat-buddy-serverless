@@ -173,9 +173,6 @@ function parseBoxScore(players, gameData, teamId, teamStatus, opposingTeamId) {
 module.exports = function constructLivePlays(gamePk, gameEvents) {
   const gameData = {
     gamePk,
-    gameType: gameEvents.data.gameData.game.type,
-    gameSeason: parseInt(gameEvents.data.gameData.game.season, 10),
-    venue: gameEvents.data.gameData.venue.name,
     dateTime: gameEvents.data.gameData.datetime.dateTime,
   };
 
