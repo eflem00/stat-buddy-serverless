@@ -5,7 +5,7 @@ function getTeamSummaries(gamePk, gameEvents, gameShifts, teamBoxscore, opposing
   const summaries = [];
 
   const teamSummary = {
-    _id: teamBoxscore.teamId,
+    id: teamBoxscore.teamId,
     dateTime: new Date(teamBoxscore.gameDate),
     gamePk,
     venue: gameEvents.data.gameData.venue.name,
@@ -22,20 +22,25 @@ function getTeamSummaries(gamePk, gameEvents, gameShifts, teamBoxscore, opposing
 
   summaries.push(teamSummary);
 
-  Object.keys(playerBoxscores).forEach((key) => {
+  Object.keys(playerBoxscores).forEach(key => {
     const player = playerBoxscores[key];
 
     if (player.stats.skaterStats || player.stats.goalieStats) {
       const playerSummary = { ...teamSummary };
-      playerSummary.teamId = playerSummary._id;
-      playerSummary._id = player.person.id;
+      playerSummary.teamId = playerSummary.id;
+      playerSummary.id = player.person.id;
 
       if (player.position.type === constants.GoalieType) {
         playerSummary.timeOnIce = timeHelper.timeToInt(player.stats.goalieStats.timeOnIce);
-        playerSummary.decision = player.stats.goalieStats.decision === '' ? constants.GoalieRelief : player.stats.goalieStats.decision;
+        playerSummary.decision =
+          player.stats.goalieStats.decision === '' ? constants.GoalieRelief : player.stats.goalieStats.decision;
         playerSummary.started = false;
-        gameShifts.data.data.forEach((gameShift) => {
-          const startTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.startTime, gameEvents.data.gameData.game.type);
+        gameShifts.data.data.forEach(gameShift => {
+          const startTime = timeHelper.getTotalSeconds(
+            gameShift.period,
+            gameShift.startTime,
+            gameEvents.data.gameData.game.type,
+          );
           if (gameShift.playerId === player.person.id && startTime === 0) {
             playerSummary.started = true;
           }
@@ -57,12 +62,14 @@ function getTeamSummaries(gamePk, gameEvents, gameShifts, teamBoxscore, opposing
 module.exports = function parseBoxScores(gamePk, gameEvents, gameSummaries, gameShifts) {
   const firstTeamSummary = gameSummaries.data.data[0];
   const secondTeamSummary = gameSummaries.data.data[1];
-  const firstTeamBoxscores = firstTeamSummary.teamId === gameEvents.data.liveData.boxscore.teams.away.team.id
-    ? gameEvents.data.liveData.boxscore.teams.away.players
-    : gameEvents.data.liveData.boxscore.teams.home.players;
-  const secondTeamBoxscores = secondTeamSummary.teamId === gameEvents.data.liveData.boxscore.teams.away.team.id
-    ? gameEvents.data.liveData.boxscore.teams.away.players
-    : gameEvents.data.liveData.boxscore.teams.home.players;
+  const firstTeamBoxscores =
+    firstTeamSummary.teamId === gameEvents.data.liveData.boxscore.teams.away.team.id
+      ? gameEvents.data.liveData.boxscore.teams.away.players
+      : gameEvents.data.liveData.boxscore.teams.home.players;
+  const secondTeamBoxscores =
+    secondTeamSummary.teamId === gameEvents.data.liveData.boxscore.teams.away.team.id
+      ? gameEvents.data.liveData.boxscore.teams.away.players
+      : gameEvents.data.liveData.boxscore.teams.home.players;
 
   const firstSummaries = getTeamSummaries(
     gamePk,

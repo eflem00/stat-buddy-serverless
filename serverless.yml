@@ -6,8 +6,6 @@ provider:
   region: 'us-west-2'
   timeout: 280
   stage: prod
-  environment:
-    REGION: ${self:provider.region}
   vpc:
     securityGroupIds:
       - sg-06e6016270b7ba7be
@@ -21,8 +19,8 @@ functions:
   events:
     handler: src/events/handler.crawl
     events:
-      - schedule: cron(0/5 * * * ? *)
+      - schedule: cron(0/1 * * * ? *)
   profiles:
     handler: src/profiles/handler.crawl
     events:
-      - schedule: cron(0/5 * * * ? *)
+      - schedule: cron(0/1 * * * ? *)

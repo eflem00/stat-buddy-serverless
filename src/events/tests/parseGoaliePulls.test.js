@@ -18,19 +18,13 @@ describe('Test the parseGoaliePulls Method', () => {
               team: {
                 id: 1,
               },
-              goalies: [
-                1,
-                2,
-              ],
+              goalies: [1, 2],
             },
             home: {
               team: {
                 id: 2,
               },
-              goalies: [
-                3,
-                4,
-              ],
+              goalies: [3, 4],
             },
           },
         },

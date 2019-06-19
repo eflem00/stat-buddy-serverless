@@ -90,47 +90,50 @@ describe('Test the parsePenalties Method', () => {
     [2, '17:01', 2, 2, '17:38', 2221, 2258],
     [2, '17:01', 4, 2, '17:38', 2221, 2378],
     [2, '17:01', 5, 2, '17:38', 2221, 2521],
-  ])('Should subtract time from 2/4 min penalties when goal scored', (penaltyPeriod, penaltyTime, penaltyMinutes, goalPeriod, goalTime, startTime, endTime) => {
-    const plays = [
-      {
-        result: {
-          eventTypeId: constants.Penalty,
-          secondaryType: 'Tripping',
-          penaltyMinutes,
+  ])(
+    'Should subtract time from 2/4 min penalties when goal scored',
+    (penaltyPeriod, penaltyTime, penaltyMinutes, goalPeriod, goalTime, startTime, endTime) => {
+      const plays = [
+        {
+          result: {
+            eventTypeId: constants.Penalty,
+            secondaryType: 'Tripping',
+            penaltyMinutes,
+          },
+          about: {
+            period: penaltyPeriod,
+            periodTime: penaltyTime,
+          },
+          team: {
+            id: 2,
+          },
         },
-        about: {
-          period: penaltyPeriod,
-          periodTime: penaltyTime,
+        {
+          result: {
+            eventTypeId: constants.Goal,
+            secondaryType: 'Wrist shot',
+          },
+          about: {
+            period: goalPeriod,
+            periodTime: goalTime,
+          },
+          team: {
+            id: 3,
+          },
         },
-        team: {
-          id: 2,
-        },
-      },
-      {
-        result: {
-          eventTypeId: constants.Goal,
-          secondaryType: 'Wrist shot',
-        },
-        about: {
-          period: goalPeriod,
-          periodTime: goalTime,
-        },
-        team: {
-          id: 3,
-        },
-      },
-    ];
-    gameEvents.data.liveData.plays.allPlays = plays;
+      ];
+      gameEvents.data.liveData.plays.allPlays = plays;
 
-    const penalties = parsePenalties(gameEvents);
+      const penalties = parsePenalties(gameEvents);
 
-    expect(penalties.length).toEqual(1);
+      expect(penalties.length).toEqual(1);
 
-    const penalty = penalties[0];
+      const penalty = penalties[0];
 
-    expect(penalty.startTime).toEqual(startTime);
-    expect(penalty.endTime).toEqual(endTime);
-  });
+      expect(penalty.startTime).toEqual(startTime);
+      expect(penalty.endTime).toEqual(endTime);
+    },
+  );
 
   test('Should only subtract time from first penalty', () => {
     const plays = [

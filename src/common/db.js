@@ -14,6 +14,15 @@ module.exports.connect = async () => {
   }
 };
 
+module.exports.disconnect = () => {
+  try {
+    mongoose.disconnect();
+  } catch (ex) {
+    console.log('Exception encountered when attempting to close connection');
+    throw new Error(ex);
+  }
+};
+
 module.exports.events = (db) => {
   const Schema = mongoose.Schema;
 
@@ -74,7 +83,7 @@ module.exports.summaries = (db) => {
   const Schema = mongoose.Schema;
 
   const Summary = new Schema({
-    _id: { type: Number },
+    id: { type: Number },
     dateTime: { type: Date },
     gamePk: { type: Number },
     venue: { type: String },

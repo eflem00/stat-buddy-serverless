@@ -25,12 +25,21 @@ module.exports.crawl = async () => {
     const startIndex = moment(eventsIndex.index);
     // const startIndex = moment('2018-02-23');
 
+    if (startIndex.format() === moment('2019-06-18').format()) {
+      console.log('Finished 2018-2019');
+      return;
+    }
+
     console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
 
     // Get the games for the given startIndex
-    const schedule = await request(`https://statsapi.web.nhl.com/api/v1/schedule?date=${startIndex.format('YYYY-MM-DD')}`);
+    const schedule = await request(
+      `https://statsapi.web.nhl.com/api/v1/schedule?date=${startIndex.format('YYYY-MM-DD')}`,
+    );
     if (schedule.data.dates.length > 0) {
-      const games = schedule.data.dates[0].games.filter(game => game.gameType !== constants.AllStarGameType && game.gameType !== constants.PreSeasonGameType);
+      const games = schedule.data.dates[0].games.filter(
+        game => game.gameType !== constants.AllStarGameType && game.gameType !== constants.PreSeasonGameType,
+      );
       for (let n = 0; n < games.length; n += 1) {
         const gamePk = games[n].gamePk;
         console.log(`Beginning game [${gamePk}]`);
@@ -38,7 +47,9 @@ module.exports.crawl = async () => {
         // Fetch data
         const gameEvents = await request(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/feed/live`);
         const gameShifts = await request(`http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=${gamePk}`);
-        const gameSummaries = await request(`https://api.nhle.com/stats/rest/team?reportType=basic&isGame=true&reportName=teamsummary&cayenneExp=gameId=${gamePk}`);
+        const gameSummaries = await request(
+          `https://api.nhle.com/stats/rest/team?reportType=basic&isGame=true&reportName=teamsummary&cayenneExp=gameId=${gamePk}`,
+        );
 
         // Validate data
         if (gameEvents.data.gameData.status.abstractGameState !== 'Final') {
@@ -74,6 +85,8 @@ module.exports.crawl = async () => {
     // Increment and save the new startIndex
     eventsIndex.index = startIndex.add(1, 'days').format('YYYY-MM-DD');
     await eventsIndex.save();
+
+    dbHelper.disconnect();
 
     console.log('Finished crawling for date: ', startIndex.subtract(1, 'days').format('YYYY-MM-DD'));
   } catch (ex) {

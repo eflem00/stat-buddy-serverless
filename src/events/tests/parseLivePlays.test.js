@@ -36,7 +36,7 @@ describe('Test the parseLivePlays Method', () => {
             },
           },
           players: {
-            'ID1': {
+            ID1: {
               shootsCatches: 'L',
             },
           },
@@ -57,7 +57,7 @@ describe('Test the parseLivePlays Method', () => {
     goaliePulls = [];
   });
 
-  test.each([[undefined], [[]]])('Should return succesfully with empty plays', (players) => {
+  test.each([[undefined], [[]]])('Should return succesfully with empty plays', players => {
     gameEvents.data.liveData.plays.allPlays.push({ players });
     expect(() => parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls)).not.toThrow();
   });
@@ -77,20 +77,24 @@ describe('Test the parseLivePlays Method', () => {
         home: 0,
       },
     };
-    const players = [{
-      player: {
-        id: '1',
+    const players = [
+      {
+        player: {
+          id: '1',
+        },
       },
-    }];
+    ];
     const team = {
       id: awayTeamId,
     };
-    gameEvents.data.liveData.plays.allPlays = [{
-      result,
-      about,
-      players,
-      team,
-    }];
+    gameEvents.data.liveData.plays.allPlays = [
+      {
+        result,
+        about,
+        players,
+        team,
+      },
+    ];
     const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
     expect(events.length).toEqual(1);
 
@@ -110,7 +114,7 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.teamStatus).toEqual(constants.Away);
   });
 
-  test.each([[constants.Home], [constants.Away]])('Should check team status', (status) => {
+  test.each([[constants.Home], [constants.Away]])('Should check team status', status => {
     const teamId = status === constants.Home ? homeTeamId : awayTeamId;
     const result = {
       eventTypeId: constants.Shot,
@@ -136,21 +140,25 @@ describe('Test the parseLivePlays Method', () => {
     };
     const x = 10;
     const y = -3;
-    const players = [{
-      player: {
-        id: '1',
+    const players = [
+      {
+        player: {
+          id: '1',
+        },
       },
-    }];
-    gameEvents.data.liveData.plays.allPlays = [{
-      result,
-      about,
-      team,
-      coordinates: {
-        x,
-        y,
+    ];
+    gameEvents.data.liveData.plays.allPlays = [
+      {
+        result,
+        about,
+        team,
+        coordinates: {
+          x,
+          y,
+        },
+        players,
       },
-      players,
-    }];
+    ];
     const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
     expect(events.length).toEqual(1);
 
@@ -187,82 +195,87 @@ describe('Test the parseLivePlays Method', () => {
     [constants.Away, constants.Goal, constants.Assist, constants.Away, 'Forward'],
     [constants.Away, constants.Goal, constants.GoalAllowed, constants.Home, constants.GoalieType],
     [constants.Away, 'RANDOM', 'RANDOM', constants.Home, 'RANDOM'],
-  ])('Should handle play with player data', (teamStatus, eventTypeId, secondEventTypeId, secondTeamStatus, secondaryPlayerType) => {
-    const player1 = 666;
-    const player2 = 555;
-    const teamId = teamStatus === constants.Home ? homeTeamId : awayTeamId;
-    const secondTeamId = secondTeamStatus === constants.Home ? homeTeamId : awayTeamId;
+  ])(
+    'Should handle play with player data',
+    (teamStatus, eventTypeId, secondEventTypeId, secondTeamStatus, secondaryPlayerType) => {
+      const player1 = 666;
+      const player2 = 555;
+      const teamId = teamStatus === constants.Home ? homeTeamId : awayTeamId;
+      const secondTeamId = secondTeamStatus === constants.Home ? homeTeamId : awayTeamId;
 
-    const players = {};
-    players[`ID${player1}`] = {
-      shootsCatches: 'L',
-    };
-    players[`ID${player2}`] = {
-      shootsCatches: 'R',
-    };
-    gameEvents.data.gameData.players = players;
+      const players = {};
+      players[`ID${player1}`] = {
+        shootsCatches: 'L',
+      };
+      players[`ID${player2}`] = {
+        shootsCatches: 'R',
+      };
+      gameEvents.data.gameData.players = players;
 
-    gameEvents.data.liveData.plays.allPlays = [{
-      result: {
-        eventTypeId,
-      },
-      about: {
-        period: 2,
-        periodType: 'regular',
-        periodTime: '02:36',
-        dateTime: '2018-01-01T18:46:36.233Z',
-        goals: {
-          away: 1,
-          home: 0,
-        },
-      },
-      coordinates: {},
-      team: {
-        id: teamId,
-      },
-      players: [
+      gameEvents.data.liveData.plays.allPlays = [
         {
-          player: {
-            id: player1,
+          result: {
+            eventTypeId,
           },
-        },
-        {
-          player: {
-            id: player2,
+          about: {
+            period: 2,
+            periodType: 'regular',
+            periodTime: '02:36',
+            dateTime: '2018-01-01T18:46:36.233Z',
+            goals: {
+              away: 1,
+              home: 0,
+            },
           },
-          playerType: secondaryPlayerType,
+          coordinates: {},
+          team: {
+            id: teamId,
+          },
+          players: [
+            {
+              player: {
+                id: player1,
+              },
+            },
+            {
+              player: {
+                id: player2,
+              },
+              playerType: secondaryPlayerType,
+            },
+          ],
         },
-      ],
-    }];
+      ];
 
-    const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
+      const events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
 
-    expect(events.length).toEqual(2);
+      expect(events.length).toEqual(2);
 
-    let doc = events[0];
-    expect(doc.eventTypeId).toEqual(eventTypeId);
-    expect(doc.playerId).toEqual(player1);
-    expect(doc.handedness).toEqual('L');
-    expect(doc.teamId).toEqual(teamId);
-    expect(doc.teamStatus).toEqual(teamStatus);
-    expect(doc.teamStrength).toEqual(5);
-    expect(doc.teamScore).toEqual(teamStatus === constants.Home ? 0 : 1);
-    expect(doc.opposingTeamId).not.toEqual(teamId);
-    expect(doc.opposingStrength).toEqual(5);
-    expect(doc.opposingTeamScore).toEqual(teamStatus === constants.Home ? 1 : 0);
+      let doc = events[0];
+      expect(doc.eventTypeId).toEqual(eventTypeId);
+      expect(doc.playerId).toEqual(player1);
+      expect(doc.handedness).toEqual('L');
+      expect(doc.teamId).toEqual(teamId);
+      expect(doc.teamStatus).toEqual(teamStatus);
+      expect(doc.teamStrength).toEqual(5);
+      expect(doc.teamScore).toEqual(teamStatus === constants.Home ? 0 : 1);
+      expect(doc.opposingTeamId).not.toEqual(teamId);
+      expect(doc.opposingStrength).toEqual(5);
+      expect(doc.opposingTeamScore).toEqual(teamStatus === constants.Home ? 1 : 0);
 
-    doc = events[1];
-    expect(doc.eventTypeId).toEqual(secondEventTypeId);
-    expect(doc.playerId).toEqual(player2);
-    expect(doc.handedness).toEqual('R');
-    expect(doc.teamId).toEqual(secondTeamId);
-    expect(doc.teamStatus).toEqual(secondTeamStatus);
-    expect(doc.teamStrength).toEqual(5);
-    expect(doc.teamScore).toEqual(secondTeamStatus === constants.Home ? 0 : 1);
-    expect(doc.opposingTeamId).not.toEqual(secondTeamId);
-    expect(doc.opposingStrength).toEqual(5);
-    expect(doc.opposingTeamScore).toEqual(secondTeamStatus === constants.Home ? 1 : 0);
-  });
+      doc = events[1];
+      expect(doc.eventTypeId).toEqual(secondEventTypeId);
+      expect(doc.playerId).toEqual(player2);
+      expect(doc.handedness).toEqual('R');
+      expect(doc.teamId).toEqual(secondTeamId);
+      expect(doc.teamStatus).toEqual(secondTeamStatus);
+      expect(doc.teamStrength).toEqual(5);
+      expect(doc.teamScore).toEqual(secondTeamStatus === constants.Home ? 0 : 1);
+      expect(doc.opposingTeamId).not.toEqual(secondTeamId);
+      expect(doc.opposingStrength).toEqual(5);
+      expect(doc.opposingTeamScore).toEqual(secondTeamStatus === constants.Home ? 1 : 0);
+    },
+  );
 
   test('Should find players that were on the ice', () => {
     const player1 = 666;
@@ -272,29 +285,33 @@ describe('Test the parseLivePlays Method', () => {
     };
     gameEvents.data.gameData.players = players;
 
-    gameEvents.data.liveData.plays.allPlays = [{
-      result: {
-        eventTypeId: 'kappa',
-      },
-      about: {
-        period: 2,
-        periodType: 'regular',
-        periodTime: '02:36',
-        dateTime: '2018-01-01T18:46:36.233Z',
-        goals: {
-          away: 0,
-          home: 0,
+    gameEvents.data.liveData.plays.allPlays = [
+      {
+        result: {
+          eventTypeId: 'kappa',
+        },
+        about: {
+          period: 2,
+          periodType: 'regular',
+          periodTime: '02:36',
+          dateTime: '2018-01-01T18:46:36.233Z',
+          goals: {
+            away: 0,
+            home: 0,
+          },
+        },
+        players: [
+          {
+            player: {
+              id: player1,
+            },
+          },
+        ],
+        team: {
+          id: 1,
         },
       },
-      players: [{
-        player: {
-          id: player1,
-        },
-      }],
-      team: {
-        id: 1,
-      },
-    }];
+    ];
 
     const notInPlayerId1 = 666;
     const notInPlayerId2 = 666666;
@@ -373,52 +390,58 @@ describe('Test the parseLivePlays Method', () => {
     };
     gameEvents.data.gameData.players = players;
 
-    gameEvents.data.liveData.plays.allPlays = [{
-      result: {
-        eventTypeId: 'kappa',
-      },
-      about: {
-        period: 1,
-        periodType: 'regular',
-        periodTime: '00:00',
-        dateTime: '2018-01-01T18:46:36.233Z',
-        goals: {
-          away: 0,
-          home: 0,
+    gameEvents.data.liveData.plays.allPlays = [
+      {
+        result: {
+          eventTypeId: 'kappa',
+        },
+        about: {
+          period: 1,
+          periodType: 'regular',
+          periodTime: '00:00',
+          dateTime: '2018-01-01T18:46:36.233Z',
+          goals: {
+            away: 0,
+            home: 0,
+          },
+        },
+        players: [
+          {
+            player: {
+              id: player1,
+            },
+          },
+        ],
+        team: {
+          id: 1,
         },
       },
-      players: [{
-        player: {
-          id: player1,
+      {
+        result: {
+          eventTypeId: 'kappa2',
         },
-      }],
-      team: {
-        id: 1,
-      },
-    },
-    {
-      result: {
-        eventTypeId: 'kappa2',
-      },
-      about: {
-        period: 1,
-        periodType: 'regular',
-        periodTime: '20:00',
-        dateTime: '2018-01-01T18:46:36.233Z',
-        goals: {
-          away: 0,
-          home: 0,
+        about: {
+          period: 1,
+          periodType: 'regular',
+          periodTime: '20:00',
+          dateTime: '2018-01-01T18:46:36.233Z',
+          goals: {
+            away: 0,
+            home: 0,
+          },
+        },
+        players: [
+          {
+            player: {
+              id: newPlayer1,
+            },
+          },
+        ],
+        team: {
+          id: 1,
         },
       },
-      players: [{
-        player: {
-          id: newPlayer1,
-        },
-      }],
-      team: {
-        id: 1,
-      },
-    }];
+    ];
 
     gameShifts.data.data = [
       {
@@ -465,7 +488,7 @@ describe('Test the parseLivePlays Method', () => {
     expect(doc.players.length).toEqual(0);
   });
 
-  test.each([['R'], ['P']])('Should determine strength of play', (gameType) => {
+  test.each([['R'], ['P']])('Should determine strength of play', gameType => {
     gameEvents.data.gameData.game.type = gameType;
     gameEvents.data.liveData.plays.allPlays = [
       {
@@ -484,11 +507,13 @@ describe('Test the parseLivePlays Method', () => {
         team: {
           id: 2,
         },
-        players: [{
-          player: {
-            id: 1,
+        players: [
+          {
+            player: {
+              id: 1,
+            },
           },
-        }],
+        ],
       },
       {
         result: {
@@ -506,11 +531,13 @@ describe('Test the parseLivePlays Method', () => {
         team: {
           id: 1,
         },
-        players: [{
-          player: {
-            id: 1,
+        players: [
+          {
+            player: {
+              id: 1,
+            },
           },
-        }],
+        ],
       },
       {
         result: {
@@ -528,11 +555,13 @@ describe('Test the parseLivePlays Method', () => {
         team: {
           id: 2,
         },
-        players: [{
-          player: {
-            id: 1,
+        players: [
+          {
+            player: {
+              id: 1,
+            },
           },
-        }],
+        ],
       },
       {
         result: {
@@ -550,11 +579,13 @@ describe('Test the parseLivePlays Method', () => {
         team: {
           id: 2,
         },
-        players: [{
-          player: {
-            id: 1,
+        players: [
+          {
+            player: {
+              id: 1,
+            },
           },
-        }],
+        ],
       },
       {
         result: {
@@ -572,11 +603,13 @@ describe('Test the parseLivePlays Method', () => {
         team: {
           id: 1,
         },
-        players: [{
-          player: {
-            id: 1,
+        players: [
+          {
+            player: {
+              id: 1,
+            },
           },
-        }],
+        ],
       },
       {
         result: {
@@ -593,11 +626,13 @@ describe('Test the parseLivePlays Method', () => {
         team: {
           id: 1,
         },
-        players: [{
-          player: {
-            id: 1,
+        players: [
+          {
+            player: {
+              id: 1,
+            },
           },
-        }],
+        ],
       },
       {
         result: {
@@ -614,11 +649,13 @@ describe('Test the parseLivePlays Method', () => {
         team: {
           id: 2,
         },
-        players: [{
-          player: {
-            id: 1,
+        players: [
+          {
+            player: {
+              id: 1,
+            },
           },
-        }],
+        ],
       },
     ];
 

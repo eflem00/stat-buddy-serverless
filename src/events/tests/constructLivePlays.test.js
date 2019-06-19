@@ -159,14 +159,38 @@ describe('Test the constructLivePlays', () => {
     expect(event.dateTime).toEqual(gameEvents.data.gameData.datetime.dateTime);
 
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal).length).toEqual(3);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.teamStrength === 4 && x.opposingStrength === 5).length).toEqual(1);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.teamStrength === 5 && x.opposingStrength === 4).length).toEqual(2);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.teamStrength === 5 && x.opposingStrength === 5).length).toEqual(0);
+    expect(
+      events.filter(
+        x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.teamStrength === 4 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(1);
+    expect(
+      events.filter(
+        x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.teamStrength === 5 && x.opposingStrength === 4,
+      ).length,
+    ).toEqual(2);
+    expect(
+      events.filter(
+        x => x.teamId === '1' && x.eventTypeId === constants.Goal && x.teamStrength === 5 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(0);
 
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist).length).toEqual(5);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.teamStrength === 4 && x.opposingStrength === 5).length).toEqual(3);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.teamStrength === 5 && x.opposingStrength === 4).length).toEqual(2);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.teamStrength === 5 && x.opposingStrength === 5).length).toEqual(0);
+    expect(
+      events.filter(
+        x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.teamStrength === 4 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(3);
+    expect(
+      events.filter(
+        x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.teamStrength === 5 && x.opposingStrength === 4,
+      ).length,
+    ).toEqual(2);
+    expect(
+      events.filter(
+        x => x.teamId === '1' && x.eventTypeId === constants.Assist && x.teamStrength === 5 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(0);
 
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Shot).length).toEqual(5);
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.BlockedShot).length).toEqual(1);
@@ -177,24 +201,84 @@ describe('Test the constructLivePlays', () => {
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Giveaway).length).toEqual(4);
 
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Save).length).toEqual(5);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Save && x.teamStrength === 4 && x.opposingStrength === 5).length).toEqual(2);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Save && x.teamStrength === 5 && x.opposingStrength === 5).length).toEqual(1);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.Save && x.teamStrength === 5 && x.opposingStrength === 4).length).toEqual(2);
+    expect(
+      events.filter(
+        x => x.teamId === '1' && x.eventTypeId === constants.Save && x.teamStrength === 4 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(2);
+    expect(
+      events.filter(
+        x => x.teamId === '1' && x.eventTypeId === constants.Save && x.teamStrength === 5 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(1);
+    expect(
+      events.filter(
+        x => x.teamId === '1' && x.eventTypeId === constants.Save && x.teamStrength === 5 && x.opposingStrength === 4,
+      ).length,
+    ).toEqual(2);
 
     expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.GoalAllowed).length).toEqual(3);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.GoalAllowed && x.teamStrength === 4 && x.opposingStrength === 5).length).toEqual(0);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.GoalAllowed && x.teamStrength === 5 && x.opposingStrength === 5).length).toEqual(2);
-    expect(events.filter(x => x.teamId === '1' && x.eventTypeId === constants.GoalAllowed && x.teamStrength === 5 && x.opposingStrength === 4).length).toEqual(1);
+    expect(
+      events.filter(
+        x =>
+          x.teamId === '1' &&
+          x.eventTypeId === constants.GoalAllowed &&
+          x.teamStrength === 4 &&
+          x.opposingStrength === 5,
+      ).length,
+    ).toEqual(0);
+    expect(
+      events.filter(
+        x =>
+          x.teamId === '1' &&
+          x.eventTypeId === constants.GoalAllowed &&
+          x.teamStrength === 5 &&
+          x.opposingStrength === 5,
+      ).length,
+    ).toEqual(2);
+    expect(
+      events.filter(
+        x =>
+          x.teamId === '1' &&
+          x.eventTypeId === constants.GoalAllowed &&
+          x.teamStrength === 5 &&
+          x.opposingStrength === 4,
+      ).length,
+    ).toEqual(1);
 
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Goal).length).toEqual(4);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Goal && x.teamStrength === 4 && x.opposingStrength === 5).length).toEqual(1);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Goal && x.teamStrength === 5 && x.opposingStrength === 4).length).toEqual(2);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Goal && x.teamStrength === 5 && x.opposingStrength === 5).length).toEqual(1);
+    expect(
+      events.filter(
+        x => x.teamId === '2' && x.eventTypeId === constants.Goal && x.teamStrength === 4 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(1);
+    expect(
+      events.filter(
+        x => x.teamId === '2' && x.eventTypeId === constants.Goal && x.teamStrength === 5 && x.opposingStrength === 4,
+      ).length,
+    ).toEqual(2);
+    expect(
+      events.filter(
+        x => x.teamId === '2' && x.eventTypeId === constants.Goal && x.teamStrength === 5 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(1);
 
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Assist).length).toEqual(8);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Assist && x.teamStrength === 4 && x.opposingStrength === 5).length).toEqual(3);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Assist && x.teamStrength === 5 && x.opposingStrength === 4).length).toEqual(4);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Assist && x.teamStrength === 5 && x.opposingStrength === 5).length).toEqual(1);
+    expect(
+      events.filter(
+        x => x.teamId === '2' && x.eventTypeId === constants.Assist && x.teamStrength === 4 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(3);
+    expect(
+      events.filter(
+        x => x.teamId === '2' && x.eventTypeId === constants.Assist && x.teamStrength === 5 && x.opposingStrength === 4,
+      ).length,
+    ).toEqual(4);
+    expect(
+      events.filter(
+        x => x.teamId === '2' && x.eventTypeId === constants.Assist && x.teamStrength === 5 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(1);
 
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Shot).length).toEqual(7);
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.BlockedShot).length).toEqual(2);
@@ -205,13 +289,49 @@ describe('Test the constructLivePlays', () => {
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Giveaway).length).toEqual(3);
 
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Save).length).toEqual(3);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Save && x.teamStrength === 4 && x.opposingStrength === 5).length).toEqual(1);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Save && x.teamStrength === 5 && x.opposingStrength === 5).length).toEqual(1);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.Save && x.teamStrength === 5 && x.opposingStrength === 4).length).toEqual(1);
+    expect(
+      events.filter(
+        x => x.teamId === '2' && x.eventTypeId === constants.Save && x.teamStrength === 4 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(1);
+    expect(
+      events.filter(
+        x => x.teamId === '2' && x.eventTypeId === constants.Save && x.teamStrength === 5 && x.opposingStrength === 5,
+      ).length,
+    ).toEqual(1);
+    expect(
+      events.filter(
+        x => x.teamId === '2' && x.eventTypeId === constants.Save && x.teamStrength === 5 && x.opposingStrength === 4,
+      ).length,
+    ).toEqual(1);
 
     expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.GoalAllowed).length).toEqual(2);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.GoalAllowed && x.teamStrength === 4 && x.opposingStrength === 5).length).toEqual(1);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.GoalAllowed && x.teamStrength === 5 && x.opposingStrength === 5).length).toEqual(1);
-    expect(events.filter(x => x.teamId === '2' && x.eventTypeId === constants.GoalAllowed && x.teamStrength === 5 && x.opposingStrength === 4).length).toEqual(0);
+    expect(
+      events.filter(
+        x =>
+          x.teamId === '2' &&
+          x.eventTypeId === constants.GoalAllowed &&
+          x.teamStrength === 4 &&
+          x.opposingStrength === 5,
+      ).length,
+    ).toEqual(1);
+    expect(
+      events.filter(
+        x =>
+          x.teamId === '2' &&
+          x.eventTypeId === constants.GoalAllowed &&
+          x.teamStrength === 5 &&
+          x.opposingStrength === 5,
+      ).length,
+    ).toEqual(1);
+    expect(
+      events.filter(
+        x =>
+          x.teamId === '2' &&
+          x.eventTypeId === constants.GoalAllowed &&
+          x.teamStrength === 5 &&
+          x.opposingStrength === 4,
+      ).length,
+    ).toEqual(0);
   });
 });

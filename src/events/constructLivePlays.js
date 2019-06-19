@@ -3,7 +3,7 @@ const constants = require('./constants');
 function parseBoxScore(players, gameData, teamId, teamStatus, opposingTeamId) {
   const events = [];
 
-  Object.keys(players).forEach((key) => {
+  Object.keys(players).forEach(key => {
     const player = players[key];
     const playerId = player.person.id;
     const handedness = player.person.shootsCatches;

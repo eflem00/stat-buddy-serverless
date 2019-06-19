@@ -5,7 +5,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
   const events = [];
 
   // Process plays
-  gameEvents.data.liveData.plays.allPlays.forEach((play) => {
+  gameEvents.data.liveData.plays.allPlays.forEach(play => {
     if (play.players && play.team && play.players.length > 0) {
       const doc = { gamePk };
 
@@ -16,7 +16,11 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       // Event data
       doc.dateTime = new Date(play.about.dateTime);
       doc.eventTypeId = play.result.eventTypeId;
-      doc.playTime = timeHelper.getTotalSeconds(play.about.period, play.about.periodTime, gameEvents.data.gameData.game.type);
+      doc.playTime = timeHelper.getTotalSeconds(
+        play.about.period,
+        play.about.periodTime,
+        gameEvents.data.gameData.game.type,
+      );
 
       // Team data
       const teamIsHome = play.team.id === gameEvents.data.gameData.teams.home.id;
@@ -51,31 +55,43 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       const fiveSkatersAllowed = doc.playTime < 3600 || gameEvents.data.gameData.game.type === 'P';
       doc.teamStrength = fiveSkatersAllowed ? 5 : 3;
       doc.opposingStrength = fiveSkatersAllowed ? 5 : 3;
-      gamePenalties.filter(penalty => doc.playTime >= penalty.startTime && doc.playTime <= penalty.endTime).forEach((penalty) => {
-        if (fiveSkatersAllowed && penalty.teamId === doc.teamId && doc.teamStrength > 3) {
-          doc.teamStrength -= 1;
-        } else if (fiveSkatersAllowed && penalty.teamId !== doc.teamId && doc.opposingStrength > 3) {
-          doc.opposingStrength -= 1;
-        } else if (!fiveSkatersAllowed && penalty.teamId === doc.teamId && doc.opposingStrength < 5) {
-          doc.opposingStrength += 1;
-        } else if (!fiveSkatersAllowed && penalty.teamId !== doc.teamId && doc.teamStrength < 5) {
-          doc.teamStrength += 1;
-        }
-      });
-      goaliePulls.filter(goaliePull => doc.playTime >= goaliePull.startTime && doc.playTime <= goaliePull.endTime).forEach((goaliePull) => {
-        if (goaliePull.teamId === doc.teamId) {
-          doc.teamStrength += 1;
-        } else {
-          doc.opposingStrength += 1;
-        }
-      });
+      gamePenalties
+        .filter(penalty => doc.playTime >= penalty.startTime && doc.playTime <= penalty.endTime)
+        .forEach(penalty => {
+          if (fiveSkatersAllowed && penalty.teamId === doc.teamId && doc.teamStrength > 3) {
+            doc.teamStrength -= 1;
+          } else if (fiveSkatersAllowed && penalty.teamId !== doc.teamId && doc.opposingStrength > 3) {
+            doc.opposingStrength -= 1;
+          } else if (!fiveSkatersAllowed && penalty.teamId === doc.teamId && doc.opposingStrength < 5) {
+            doc.opposingStrength += 1;
+          } else if (!fiveSkatersAllowed && penalty.teamId !== doc.teamId && doc.teamStrength < 5) {
+            doc.teamStrength += 1;
+          }
+        });
+      goaliePulls
+        .filter(goaliePull => doc.playTime >= goaliePull.startTime && doc.playTime <= goaliePull.endTime)
+        .forEach(goaliePull => {
+          if (goaliePull.teamId === doc.teamId) {
+            doc.teamStrength += 1;
+          } else {
+            doc.opposingStrength += 1;
+          }
+        });
 
       // Players on ice
       doc.players = [];
       doc.opposingPlayers = [];
-      gameShifts.data.data.forEach((gameShift) => {
-        const startTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.startTime, gameEvents.data.gameData.game.type);
-        const endTime = timeHelper.getTotalSeconds(gameShift.period, gameShift.endTime, gameEvents.data.gameData.game.type);
+      gameShifts.data.data.forEach(gameShift => {
+        const startTime = timeHelper.getTotalSeconds(
+          gameShift.period,
+          gameShift.startTime,
+          gameEvents.data.gameData.game.type,
+        );
+        const endTime = timeHelper.getTotalSeconds(
+          gameShift.period,
+          gameShift.endTime,
+          gameEvents.data.gameData.game.type,
+        );
         const playTime = doc.playTime;
 
         if (playTime % 1200 !== 0 && startTime < playTime && playTime <= endTime) {
@@ -84,7 +100,11 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
           } else {
             doc.opposingPlayers.push(gameShift.playerId);
           }
-        } else if (playTime % 1200 === 0 && gameShift.period === play.about.period && (startTime === playTime || playTime === endTime)) {
+        } else if (
+          playTime % 1200 === 0 &&
+          gameShift.period === play.about.period &&
+          (startTime === playTime || playTime === endTime)
+        ) {
           if (gameShift.teamId === doc.teamId) {
             doc.players.push(gameShift.playerId);
           } else {
@@ -105,7 +125,10 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
           newDoc.handedness = gameEvents.data.gameData.players[`ID${newPlayerId}`].shootsCatches;
 
           // reverse team info in these cases
-          if (doc.eventTypeId !== constants.Goal || (doc.eventTypeId === constants.Goal && newPlayer.playerType === constants.GoalieType)) {
+          if (
+            doc.eventTypeId !== constants.Goal ||
+            (doc.eventTypeId === constants.Goal && newPlayer.playerType === constants.GoalieType)
+          ) {
             newDoc.teamId = doc.opposingTeamId;
             newDoc.teamStatus = doc.teamStatus === constants.Home ? constants.Away : constants.Home;
             newDoc.teamStrength = doc.opposingStrength;
@@ -134,7 +157,8 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
               newDoc.eventTypeId = constants.PenaltyDrawn;
               break;
             case constants.Goal:
-              newDoc.eventTypeId = newPlayer.playerType === constants.GoalieType ? constants.GoalAllowed : constants.Assist;
+              newDoc.eventTypeId =
+                newPlayer.playerType === constants.GoalieType ? constants.GoalAllowed : constants.Assist;
               break;
             default:
               break;
