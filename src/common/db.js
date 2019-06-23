@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 module.exports.connect = async () => {
   try {
     const connString = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_TARGET}?retryWrites=true&w=majority`;
-    mongoose.connect(connString);
+    mongoose.connect(connString, { useFindAndModify: false });
 
     console.log('Connected to db');
 

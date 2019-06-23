@@ -36,14 +36,17 @@ module.exports.crawl = async () => {
         conference: teamData.conference.name,
         conferenceId: teamData.conference.id,
       });
-      console.log('i: ', i);
       await Profiles.findOneAndUpdate({ _id: teamData.id }, team, { upsert: true });
 
       const roster = teamData.roster.roster;
+      const requests = [];
       for (let j = 0; j < roster.length; j += 1) {
         const playerId = roster[j].person.id;
-        const playerResponse = await request(`https://statsapi.web.nhl.com/api/v1/people/${playerId}?expand=person`);
-        const playerData = playerResponse.data.people[0];
+        requests.push(request(`https://statsapi.web.nhl.com/api/v1/people/${playerId}?expand=person`));
+      }
+      const responses = await Promise.all(requests);
+      for (let k = 0; k < responses.length; k += 1) {
+        const playerData = responses[k].data.people[0];
         const player = new Profiles({
           _id: playerData.id,
           fullName: playerData.fullName,
@@ -77,7 +80,6 @@ module.exports.crawl = async () => {
             type: playerData.primaryPosition.type,
           };
         }
-        console.log('j: ', j);
         await Profiles.findOneAndUpdate({ _id: playerData.id }, player, { upsert: true });
       }
     }
