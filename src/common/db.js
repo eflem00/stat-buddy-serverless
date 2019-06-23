@@ -117,3 +117,52 @@ module.exports.summaries = db => {
 
   return summaries;
 };
+
+module.exports.profiles = db => {
+  const Schema = mongoose.Schema;
+
+  const Profile = new Schema({
+    _id: { type: Number, required: true },
+    name: { type: String },
+    abbreviation: { type: String },
+    teamname: { type: String },
+    shortName: { type: String },
+    venue: { type: String },
+    city: { type: String },
+    locationName: { type: String },
+    division: { type: String },
+    divisionId: { type: Number },
+    conference: { type: String },
+    conferenceId: { type: Number },
+    fullName: { type: String },
+    firstName: { type: String },
+    lastName: { type: String },
+    primaryNumber: { type: String },
+    birthDate: { type: String },
+    currentAge: { type: String },
+    birthCity: { type: String },
+    birthCountry: { type: String },
+    nationality: { type: String },
+    height: { type: String },
+    weight: { type: String },
+    active: { type: String },
+    alternateCaptain: { type: String },
+    captain: { type: String },
+    rookie: { type: String },
+    shootsCatches: { type: String },
+    rosterStatus: { type: String },
+    currentTeamId: { type: Number },
+    currentTeamName: { type: String },
+    position: { type: String },
+    type: { type: String },
+  });
+
+  let profiles;
+  if (db.models.profiles) {
+    profiles = db.models.profiles;
+  } else {
+    profiles = db.model('profiles', Profile);
+  }
+
+  return profiles;
+};

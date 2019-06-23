@@ -27,6 +27,7 @@ module.exports.crawl = async () => {
 
     if (startIndex.format() === moment('2019-06-18').format()) {
       console.log('Finished 2018-2019');
+      dbHelper.disconnect();
       return;
     }
 
