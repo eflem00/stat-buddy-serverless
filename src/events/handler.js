@@ -6,7 +6,7 @@ const constructLivePlays = require('./constructLivePlays');
 const parsePenalties = require('./parsePenalties');
 const parseBoxScores = require('./parseBoxScores');
 const parseGoaliePulls = require('./parseGoaliePulls');
-const constants = require('./constants');
+const constants = require('../common/constants');
 const dbHelper = require('../common/db');
 
 module.exports.crawl = async () => {
@@ -67,6 +67,8 @@ module.exports.crawl = async () => {
           const goaliePulls = parseGoaliePulls(gameEvents, gameShifts);
           events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
         } else {
+          console.log(`GAME MISSING: [${gamePk}]`);
+          eventsIndex.badGames.push(gamePk);
           events = constructLivePlays(gamePk, gameEvents);
         }
         const summaries = parseBoxScores(gamePk, gameEvents, gameSummaries, gameShifts);

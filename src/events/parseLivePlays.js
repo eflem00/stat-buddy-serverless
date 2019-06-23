@@ -1,5 +1,5 @@
-const timeHelper = require('./timeHelper');
-const constants = require('./constants');
+const timeHelper = require('../common/timeHelper');
+const constants = require('../common/constants');
 
 module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls) {
   const events = [];
@@ -46,7 +46,7 @@ module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePen
       if (play.result.penaltyMinutes !== undefined) {
         doc.penaltyMinutes = play.result.penaltyMinutes;
       }
-      if (play.coordinates !== undefined && play.coordinates.x !== undefined && play.coordinates.y !== undefined) {
+      if (play.coordinates && play.coordinates.x !== undefined && play.coordinates.y !== undefined) {
         doc.x = play.coordinates.x;
         doc.y = play.coordinates.y;
       }

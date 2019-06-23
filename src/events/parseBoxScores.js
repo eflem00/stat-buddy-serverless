@@ -1,5 +1,5 @@
-const timeHelper = require('./timeHelper');
-const constants = require('./constants');
+const timeHelper = require('../common/timeHelper');
+const constants = require('../common/constants');
 
 function getTeamSummaries(gamePk, gameEvents, gameShifts, teamBoxscore, opposingTeamBoxscore, playerBoxscores) {
   const summaries = [];
@@ -18,6 +18,8 @@ function getTeamSummaries(gamePk, gameEvents, gameShifts, teamBoxscore, opposing
     soWin: teamBoxscore.shootoutGamesWon,
     soLoss: teamBoxscore.shootoutGamesLost,
     points: teamBoxscore.points,
+    goalsFor: teamBoxscore.goalsFor,
+    goalsAgainst: teamBoxscore.goalsAgainst,
   };
 
   summaries.push(teamSummary);
@@ -32,9 +34,10 @@ function getTeamSummaries(gamePk, gameEvents, gameShifts, teamBoxscore, opposing
 
       if (player.position.type === constants.GoalieType) {
         playerSummary.timeOnIce = timeHelper.timeToInt(player.stats.goalieStats.timeOnIce);
-        playerSummary.decision =
-          player.stats.goalieStats.decision === '' ? constants.GoalieRelief : player.stats.goalieStats.decision;
-        playerSummary.started = false;
+        if (player.stats.goalieStats.decision !== '') {
+          playerSummary.decision = player.stats.goalieStats.decision === constants.GoalieWin ? 1 : 0;
+        }
+        playerSummary.started = 0;
         gameShifts.data.data.forEach(gameShift => {
           const startTime = timeHelper.getTotalSeconds(
             gameShift.period,
@@ -42,7 +45,7 @@ function getTeamSummaries(gamePk, gameEvents, gameShifts, teamBoxscore, opposing
             gameEvents.data.gameData.game.type,
           );
           if (gameShift.playerId === player.person.id && startTime === 0) {
-            playerSummary.started = true;
+            playerSummary.started = 1;
           }
         });
       } else {

@@ -20,7 +20,6 @@ function timeToInt(time) {
   return leadMinute * 600 + smallMinute * 60 + leadSecond * 10 + smallSecond;
 }
 
-
 function getTotalSeconds(period, time, gameType) {
   let seconds = timeToInt(time);
   for (let i = 1; i < period; i += 1) {

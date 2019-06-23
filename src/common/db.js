@@ -23,27 +23,27 @@ module.exports.disconnect = () => {
   }
 };
 
-module.exports.events = (db) => {
+module.exports.events = db => {
   const Schema = mongoose.Schema;
 
   const Event = new Schema({
-    playerId: { type: Number },
-    gamePk: { type: Number },
-    eventTypeId: { type: String },
-    dateTime: { type: Date },
-    playTime: { type: Number },
-    teamId: { type: Number },
-    teamStatus: { type: String },
+    playerId: { type: Number, required: true },
+    eventTypeId: { type: String, required: true },
+    dateTime: { type: Date, required: true },
+    playTime: { type: Number, required: true },
+    teamId: { type: Number, required: true },
+    teamStatus: { type: String, required: true },
     teamScore: { type: String },
-    opposingTeamId: { type: Number },
+    opposingTeamId: { type: Number, required: true },
     opposingTeamScore: { type: String },
-    x: { type: Number },
-    y: { type: Number },
-    teamStrength: { type: Number },
-    opposingStrength: { type: Number },
+    teamStrength: { type: Number, required: true },
+    opposingStrength: { type: Number, required: true },
     players: { type: Array },
     opposingPlayers: { type: Array },
+    gamePk: { type: Number, required: true },
     handedness: { type: String },
+    x: { type: Number },
+    y: { type: Number },
     gameWinningGoal: { type: Boolean },
     emptyNet: { type: Boolean },
     secondaryType: { type: String },
@@ -61,12 +61,13 @@ module.exports.events = (db) => {
   return events;
 };
 
-module.exports.indexes = (db) => {
+module.exports.indexes = db => {
   const Schema = mongoose.Schema;
 
   const Index = new Schema({
-    _id: { type: String },
-    index: { type: String },
+    _id: { type: String, required: true },
+    index: { type: String, required: true },
+    badGames: { type: Array, required: true },
   });
 
   let indexes;
@@ -79,30 +80,32 @@ module.exports.indexes = (db) => {
   return indexes;
 };
 
-module.exports.summaries = (db) => {
+module.exports.summaries = db => {
   const Schema = mongoose.Schema;
 
   const Summary = new Schema({
-    id: { type: Number },
-    dateTime: { type: Date },
-    gamePk: { type: Number },
-    venue: { type: String },
-    opposingTeamId: { type: Number },
-    win: { type: Number },
-    tie: { type: Number },
-    loss: { type: Number },
-    otWin: { type: Number },
-    otLoss: { type: Number },
-    soWin: { type: Number },
-    soLoss: { type: Number },
-    points: { type: Number },
+    id: { type: Number, required: true },
+    dateTime: { type: Date, required: true },
+    gamePk: { type: Number, required: true },
+    venue: { type: String, required: true },
+    opposingTeamId: { type: Number, required: true },
+    win: { type: Number, required: true },
+    tie: { type: Number, required: true },
+    loss: { type: Number, required: true },
+    otWin: { type: Number, required: true },
+    otLoss: { type: Number, required: true },
+    soWin: { type: Number, required: true },
+    soLoss: { type: Number, required: true },
+    points: { type: Number, required: true },
+    goalsFor: { type: Number, required: true },
+    goalsAgainst: { type: Number, required: true },
     teamId: { type: Number },
     timeOnIce: { type: Number },
     evenTimeOnIce: { type: Number },
     powerPlayTimeOnIce: { type: Number },
     shortHandedTimeOnIce: { type: Number },
-    decision: { type: String },
-    started: { type: Boolean },
+    decision: { type: Number },
+    started: { type: Number },
   });
 
   let summaries;

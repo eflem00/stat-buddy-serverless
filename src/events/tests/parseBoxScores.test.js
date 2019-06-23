@@ -1,5 +1,5 @@
 const parseBoxScores = require('../parseBoxScores');
-const timeHelper = require('../timeHelper');
+const timeHelper = require('../../common/timeHelper');
 
 const gamePk = 2017020001;
 const gameEvents = {
@@ -129,6 +129,8 @@ const gameSummaries = {
         shootoutGamesLost: 5,
         shootoutGamesWon: 6,
         points: 7,
+        goalsFor: 4,
+        goalsAgainst: 3,
       },
       {
         teamId: 2,
@@ -141,6 +143,8 @@ const gameSummaries = {
         shootoutGamesLost: 12,
         shootoutGamesWon: 13,
         points: 14,
+        goalsFor: 3,
+        goalsAgainst: 4,
       },
     ],
   },
@@ -185,6 +189,8 @@ describe('Test the parseBoxScore Method', () => {
     expect(firstTeamSummary.soWin).toEqual(gameSummaries.data.data[0].shootoutGamesWon);
     expect(firstTeamSummary.soLoss).toEqual(gameSummaries.data.data[0].shootoutGamesLost);
     expect(firstTeamSummary.points).toEqual(gameSummaries.data.data[0].points);
+    expect(firstTeamSummary.goalsFor).toEqual(gameSummaries.data.data[0].goalsFor);
+    expect(firstTeamSummary.goalsAgainst).toEqual(gameSummaries.data.data[0].goalsAgainst);
 
     const firstPlayerSummary = summaries[1];
     const firstPlayerInfo = gameEvents.data.liveData.boxscore.teams.away.players.player1;
@@ -216,8 +222,8 @@ describe('Test the parseBoxScore Method', () => {
     expect(firstGoalieSummary.id).toEqual(firstGoalieInfo.person.id);
     expect(firstGoalieSummary.dateTime).toEqual(new Date(gameSummaries.data.data[0].gameDate));
     expect(firstGoalieSummary.timeOnIce).toEqual(timeHelper.timeToInt(firstGoalieInfo.stats.goalieStats.timeOnIce));
-    expect(firstGoalieSummary.decision).toEqual('W');
-    expect(firstGoalieSummary.started).toEqual(true);
+    expect(firstGoalieSummary.decision).toEqual(1);
+    expect(firstGoalieSummary.started).toEqual(1);
     expect(firstGoalieSummary.gamePk).toEqual(gameSummaries.data.data[0].gameId);
     expect(firstGoalieSummary.opposingTeamId).toEqual(gameSummaries.data.data[1].teamId);
     expect(firstGoalieSummary.win).toEqual(gameSummaries.data.data[1].losses);
@@ -234,8 +240,8 @@ describe('Test the parseBoxScore Method', () => {
     expect(secondGoalieSummary.id).toEqual(secondGoalieInfo.person.id);
     expect(secondGoalieSummary.dateTime).toEqual(new Date(gameSummaries.data.data[0].gameDate));
     expect(secondGoalieSummary.timeOnIce).toEqual(timeHelper.timeToInt(secondGoalieInfo.stats.goalieStats.timeOnIce));
-    expect(secondGoalieSummary.decision).toEqual('X');
-    expect(secondGoalieSummary.started).toEqual(false);
+    expect(secondGoalieSummary.decision).toEqual(undefined);
+    expect(secondGoalieSummary.started).toEqual(0);
     expect(secondGoalieSummary.gamePk).toEqual(gameSummaries.data.data[0].gameId);
     expect(secondGoalieSummary.opposingTeamId).toEqual(gameSummaries.data.data[1].teamId);
     expect(secondGoalieSummary.win).toEqual(gameSummaries.data.data[1].losses);
@@ -260,6 +266,8 @@ describe('Test the parseBoxScore Method', () => {
     expect(secondTeamSummary.soWin).toEqual(gameSummaries.data.data[1].shootoutGamesWon);
     expect(secondTeamSummary.soLoss).toEqual(gameSummaries.data.data[1].shootoutGamesLost);
     expect(secondTeamSummary.points).toEqual(gameSummaries.data.data[1].points);
+    expect(secondTeamSummary.goalsFor).toEqual(gameSummaries.data.data[1].goalsFor);
+    expect(secondTeamSummary.goalsAgainst).toEqual(gameSummaries.data.data[1].goalsAgainst);
 
     const secondPlayerSummary = summaries[5];
     const secondPlayerInfo = gameEvents.data.liveData.boxscore.teams.home.players.player2;
@@ -291,8 +299,8 @@ describe('Test the parseBoxScore Method', () => {
     expect(thirdGoalieSummary.id).toEqual(thirdGoalieInfo.person.id);
     expect(thirdGoalieSummary.dateTime).toEqual(new Date(gameSummaries.data.data[1].gameDate));
     expect(thirdGoalieSummary.timeOnIce).toEqual(timeHelper.timeToInt(thirdGoalieInfo.stats.goalieStats.timeOnIce));
-    expect(thirdGoalieSummary.decision).toEqual('L');
-    expect(thirdGoalieSummary.started).toEqual(true);
+    expect(thirdGoalieSummary.decision).toEqual(0);
+    expect(thirdGoalieSummary.started).toEqual(1);
     expect(thirdGoalieSummary.gamePk).toEqual(gameSummaries.data.data[1].gameId);
     expect(thirdGoalieSummary.opposingTeamId).toEqual(gameSummaries.data.data[0].teamId);
     expect(thirdGoalieSummary.win).toEqual(gameSummaries.data.data[0].losses);

@@ -1,5 +1,5 @@
 const constructLivePlays = require('../constructLivePlays');
-const constants = require('../constants');
+const constants = require('../../common/constants');
 
 const gamePk = 123456;
 const gameEvents = {

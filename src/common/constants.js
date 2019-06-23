@@ -19,7 +19,7 @@ module.exports = {
   Away: 'AWAY',
   Home: 'HOME',
   GoalieType: 'Goalie',
-  GoalieRelief: 'X',
+  GoalieWin: 'W',
   FightingPenaltyType: 'Fighting',
   RegularGameType: 'R',
   PlayoffGameType: 'P',
