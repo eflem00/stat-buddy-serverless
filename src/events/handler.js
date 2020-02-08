@@ -16,7 +16,7 @@ module.exports.crawl = async () => {
     // Establish db connection and models
 
     if (client === null) {
-      logger.warning('No cached client found');
+      logger.warn('No cached client found');
       client = await db.connect();
     } else {
       logger.info('Using cached client');
