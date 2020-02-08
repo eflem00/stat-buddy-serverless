@@ -6,24 +6,23 @@ const parsePenalties = require('./parsePenalties');
 const parseBoxScores = require('./parseBoxScores');
 const parseGoaliePulls = require('./parseGoaliePulls');
 const constants = require('../common/constants');
-const dbHelper = require('../common/db');
+const db = require('../common/db');
 const logger = require('../common/logger');
 
 module.exports.crawl = async () => {
   try {
     // Establish db connection and models
-    const db = await dbHelper.connect();
-    const Indexes = dbHelper.indexes(db);
-    const Events = dbHelper.events(db);
-    const Summaries = dbHelper.summaries(db);
+    await db.connect();
+    const Indexes = db.indexes();
+    const Events = db.events();
+    const Summaries = db.summaries();
 
     const eventsIndex = await Indexes.findById('EventsIndex');
     const startIndex = moment(eventsIndex.index);
-    // const startIndex = moment('2018-02-23');
+    // const startIndex = moment('2019-06-18');
 
     if (startIndex.format() === moment('2019-06-18').format()) {
       logger.info('Finished 2018-2019');
-      dbHelper.disconnect();
       return;
     }
 
@@ -89,6 +88,6 @@ module.exports.crawl = async () => {
   } catch (ex) {
     logger.error(ex.message);
   } finally {
-    dbHelper.disconnect();
+    db.disconnect();
   }
 };

@@ -1,15 +1,13 @@
 const request = require('axios');
-const dotenv = require('dotenv');
-// const constants = require('../common/constants');
-const dbHelper = require('../common/db');
+const db = require('../common/db');
 const logger = require('../common/logger');
 
 module.exports.crawl = async () => {
   try {
     // Establish db connection and models
-    const db = await dbHelper.connect();
-    const Indexes = dbHelper.indexes(db);
-    const Profiles = dbHelper.profiles(db);
+    await db.connect();
+    const Indexes = db.indexes();
+    const Profiles = db.profiles();
 
     const profilesIndex = await Indexes.findById('ProfilesIndex');
     const startIndex = Number.parseInt(profilesIndex.index, 10);
@@ -89,6 +87,6 @@ module.exports.crawl = async () => {
   } catch (ex) {
     logger.error(`Ex: ${ex}`);
   } finally {
-    dbHelper.disconnect();
+    db.disconnect();
   }
 };

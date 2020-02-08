@@ -12,8 +12,6 @@ module.exports.connect = async () => {
     await mongoose.connect(connString, { useFindAndModify: false, useNewUrlParser: true });
 
     logger.info('Connected to db');
-
-    return mongoose.connection;
   } catch (ex) {
     logger.error(`Exception encountered when attempting to establish connection: ${ex.message}`);
     throw ex;
@@ -30,10 +28,10 @@ module.exports.disconnect = () => {
   }
 };
 
-module.exports.events = db => {
-  const Schema = mongoose.Schema;
+module.exports.events = () => {
+  const client = mongoose.connection;
 
-  const Event = new Schema({
+  const Event = new mongoose.Schema({
     playerId: { type: Number, required: true },
     eventTypeId: { type: String, required: true },
     dateTime: { type: Date, required: true },
@@ -59,38 +57,38 @@ module.exports.events = db => {
   });
 
   let events;
-  if (db.models.events) {
-    events = db.models.events;
+  if (client.models.events) {
+    events = client.models.events;
   } else {
-    events = db.model('events', Event);
+    events = client.model('events', Event);
   }
 
   return events;
 };
 
-module.exports.indexes = db => {
-  const Schema = mongoose.Schema;
+module.exports.indexes = () => {
+  const client = mongoose.connection;
 
-  const Index = new Schema({
+  const Index = new mongoose.Schema({
     _id: { type: String, required: true },
     index: { type: String, required: true },
     badGames: { type: Array, required: true },
   });
 
   let indexes;
-  if (db.models.indexes) {
-    indexes = db.models.indexes;
+  if (client.models.indexes) {
+    indexes = client.models.indexes;
   } else {
-    indexes = db.model('indexes', Index);
+    indexes = client.model('indexes', Index);
   }
 
   return indexes;
 };
 
-module.exports.summaries = db => {
-  const Schema = mongoose.Schema;
+module.exports.summaries = () => {
+  const client = mongoose.connection;
 
-  const Summary = new Schema({
+  const Summary = new mongoose.Schema({
     id: { type: Number, required: true },
     dateTime: { type: Date, required: true },
     gamePk: { type: Number, required: true },
@@ -116,19 +114,19 @@ module.exports.summaries = db => {
   });
 
   let summaries;
-  if (db.models.summaries) {
-    summaries = db.models.summaries;
+  if (client.models.summaries) {
+    summaries = client.models.summaries;
   } else {
-    summaries = db.model('summaries', Summary);
+    summaries = client.model('summaries', Summary);
   }
 
   return summaries;
 };
 
-module.exports.profiles = db => {
-  const Schema = mongoose.Schema;
+module.exports.profiles = () => {
+  const client = mongoose.connection;
 
-  const Profile = new Schema({
+  const Profile = new mongoose.Schema({
     _id: { type: Number, required: true },
     name: { type: String },
     abbreviation: { type: String },
@@ -165,10 +163,10 @@ module.exports.profiles = db => {
   });
 
   let profiles;
-  if (db.models.profiles) {
-    profiles = db.models.profiles;
+  if (client.models.profiles) {
+    profiles = client.models.profiles;
   } else {
-    profiles = db.model('profiles', Profile);
+    profiles = client.model('profiles', Profile);
   }
 
   return profiles;
