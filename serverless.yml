@@ -6,14 +6,6 @@ provider:
   region: 'us-west-2'
   timeout: 280
   stage: prod
-  vpc:
-    securityGroupIds:
-      - sg-06e6016270b7ba7be
-    subnetIds:
-      - subnet-01da18b7c2c643779
-      - subnet-00068135d8086f24b
-      - subnet-0f1ea28ebfe78ede2
-      - subnet-0fa6cee5cc8efa95c
 
 functions:
   events:
