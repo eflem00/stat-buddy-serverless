@@ -47,9 +47,9 @@ module.exports.crawl = async () => {
 
         // Fetch data
         const gameEvents = await request(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/feed/live`);
-        const gameShifts = await request(`http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=${gamePk}`);
+        const gameShifts = await request(`https://api.nhle.com/stats/rest/en/shiftcharts?cayenneExp=gameId=${gamePk}`);
         const gameSummaries = await request(
-          `https://api.nhle.com/stats/rest/team?reportType=basic&isGame=true&reportName=teamsummary&cayenneExp=gameId=${gamePk}`,
+          `https://api.nhle.com/stats/rest/en/team/summary?reportType=basic&isGame=true&reportName=teamsummary&cayenneExp=gameId=${gamePk}`,
         );
 
         // Validate data
