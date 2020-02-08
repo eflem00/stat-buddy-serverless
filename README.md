@@ -9,7 +9,7 @@
 
 ## Note:
 
-- It appears the NHL has depricated a key endpoint I was using to collect shift data. Untill I find a replacement for deriving this data, the crawler will not work.
+- This project is a work in progress.
 
 ## Local Install:
 - npm install -g serverless
