@@ -2,12 +2,10 @@ const request = require('axios');
 const dotenv = require('dotenv');
 // const constants = require('../common/constants');
 const dbHelper = require('../common/db');
+const logger = require('../common/logger');
 
 module.exports.crawl = async () => {
   try {
-    if (process.env.NODE_ENV !== 'production') {
-      dotenv.config();
-    }
     // Establish db connection and models
     const db = await dbHelper.connect();
     const Indexes = dbHelper.indexes(db);
@@ -17,7 +15,7 @@ module.exports.crawl = async () => {
     const startIndex = Number.parseInt(profilesIndex.index, 10);
     // const startIndex = 20182019;
 
-    console.log('Beginning crawl for year: ', startIndex);
+    logger.info('Beginning crawl for year: ', startIndex);
 
     const response = await request(`http://statsapi.web.nhl.com/api/v1/teams?expand=team.roster&season=${startIndex}`);
     const teamsData = response.data.teams;
@@ -84,14 +82,13 @@ module.exports.crawl = async () => {
       }
     }
 
-    console.log('Finished crawl for year: ', startIndex);
+    logger.info(`Finished crawl for year: ${startIndex}`);
 
     profilesIndex.index = startIndex + 10001;
     await profilesIndex.save();
-
-    dbHelper.disconnect();
-    console.log('Disconnected');
   } catch (ex) {
-    console.log('Ex: ', ex);
+    logger.error(`Ex: ${ex}`);
+  } finally {
+    dbHelper.disconnect();
   }
 };

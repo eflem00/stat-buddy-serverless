@@ -22,7 +22,8 @@
     "axios": "^0.18.0",
     "dotenv": "^8.0.0",
     "moment": "^2.24.0",
-    "mongoose": "^5.7.5"
+    "mongoose": "^5.8.11",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

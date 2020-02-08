@@ -2,7 +2,7 @@ service: stat-buddy-serverless
 
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs12.x
   region: 'us-west-2'
   timeout: 280
   stage: prod

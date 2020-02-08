@@ -1,25 +1,32 @@
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const logger = require('./logger');
 
 module.exports.connect = async () => {
   try {
+    if (process.env.NODE_ENV !== 'production') {
+      dotenv.config();
+    }
+
     const connString = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_TARGET}?retryWrites=true&w=majority`;
-    mongoose.connect(connString, { useFindAndModify: false });
+    await mongoose.connect(connString, { useFindAndModify: false, useNewUrlParser: true });
 
-    console.log('Connected to db');
+    logger.info('Connected to db');
 
-    return await mongoose.connection;
+    return mongoose.connection;
   } catch (ex) {
-    console.log('Exception encountered when attempting to establish connection');
-    throw new Error(ex);
+    logger.error(`Exception encountered when attempting to establish connection: ${ex.message}`);
+    throw ex;
   }
 };
 
 module.exports.disconnect = () => {
   try {
+    logger.info('Disconnecting from db');
     mongoose.disconnect();
   } catch (ex) {
-    console.log('Exception encountered when attempting to close connection');
-    throw new Error(ex);
+    logger.error(`Exception encountered when attempting to close connection: ${ex.message}`);
+    throw ex;
   }
 };
 

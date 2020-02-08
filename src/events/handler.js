@@ -1,6 +1,5 @@
 const request = require('axios');
 const moment = require('moment');
-const dotenv = require('dotenv');
 const parseLivePlays = require('./parseLivePlays');
 const constructLivePlays = require('./constructLivePlays');
 const parsePenalties = require('./parsePenalties');
@@ -8,17 +7,14 @@ const parseBoxScores = require('./parseBoxScores');
 const parseGoaliePulls = require('./parseGoaliePulls');
 const constants = require('../common/constants');
 const dbHelper = require('../common/db');
+const logger = require('../common/logger');
 
 module.exports.crawl = async () => {
   try {
-    if (process.env.NODE_ENV !== 'production') {
-      dotenv.config();
-    }
-
     // Establish db connection and models
     const db = await dbHelper.connect();
-    const Events = dbHelper.events(db);
     const Indexes = dbHelper.indexes(db);
+    const Events = dbHelper.events(db);
     const Summaries = dbHelper.summaries(db);
 
     const eventsIndex = await Indexes.findById('EventsIndex');
@@ -26,12 +22,12 @@ module.exports.crawl = async () => {
     // const startIndex = moment('2018-02-23');
 
     if (startIndex.format() === moment('2019-06-18').format()) {
-      console.log('Finished 2018-2019');
+      logger.info('Finished 2018-2019');
       dbHelper.disconnect();
       return;
     }
 
-    console.log('Beginning crawl for date: ', startIndex.format('YYYY-MM-DD'));
+    logger.info(`Beginning crawl for date: ${startIndex.format('YYYY-MM-DD')}`);
 
     // Get the games for the given startIndex
     const schedule = await request(
@@ -43,7 +39,7 @@ module.exports.crawl = async () => {
       );
       for (let n = 0; n < games.length; n += 1) {
         const gamePk = games[n].gamePk;
-        console.log(`Beginning game [${gamePk}]`);
+        logger.info(`Beginning game [${gamePk}]`);
 
         // Fetch data
         const gameEvents = await request(`https://statsapi.web.nhl.com/api/v1/game/${gamePk}/feed/live`);
@@ -68,20 +64,20 @@ module.exports.crawl = async () => {
           const goaliePulls = parseGoaliePulls(gameEvents, gameShifts);
           events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
         } else {
-          console.log(`GAME MISSING: [${gamePk}]`);
+          logger.info(`GAME MISSING: [${gamePk}]`);
           eventsIndex.badGames.push(gamePk);
           events = constructLivePlays(gamePk, gameEvents);
         }
         const summaries = parseBoxScores(gamePk, gameEvents, gameSummaries, gameShifts);
 
         // Write data
-        console.log(`Writting [${events.length}] events to db`);
+        logger.info(`Writting [${events.length}] events to db`);
         await Events.insertMany(events);
 
-        console.log(`Writting [${summaries.length}] summaries to db`);
+        logger.info(`Writting [${summaries.length}] summaries to db`);
         await Summaries.insertMany(summaries);
 
-        console.log(`Finished game [${gamePk}]`);
+        logger.info(`Finished game [${gamePk}]`);
       }
     }
 
@@ -89,10 +85,10 @@ module.exports.crawl = async () => {
     eventsIndex.index = startIndex.add(1, 'days').format('YYYY-MM-DD');
     await eventsIndex.save();
 
-    dbHelper.disconnect();
-
-    console.log('Finished crawling for date: ', startIndex.subtract(1, 'days').format('YYYY-MM-DD'));
+    logger.info(`Finished crawling for date: ${startIndex.subtract(1, 'days').format('YYYY-MM-DD')}`);
   } catch (ex) {
-    console.log('Ex: ', ex);
+    logger.error(ex.message);
+  } finally {
+    dbHelper.disconnect();
   }
 };
