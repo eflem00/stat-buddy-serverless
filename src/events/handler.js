@@ -9,24 +9,28 @@ const constants = require('../common/constants');
 const db = require('../common/db');
 const logger = require('../common/logger');
 
+let client = null;
+
 module.exports.crawl = async () => {
   try {
     // Establish db connection and models
-    await db.connect();
-    const Indexes = db.indexes();
-    const Events = db.events();
-    const Summaries = db.summaries();
 
-    const eventsIndex = await Indexes.findById('EventsIndex');
+    if (client === null) {
+      logger.warning('No cached client found');
+      client = await db.connect();
+    } else {
+      logger.info('Using cached client');
+    }
+
+    const eventsIndex = await client.indexes.findById('EventsIndex');
     const startIndex = moment(eventsIndex.index);
     // const startIndex = moment('2019-06-18');
+    logger.info(`Beginning crawl for date: ${startIndex.format('YYYY-MM-DD')}`);
 
     if (startIndex.format() === moment('2019-06-18').format()) {
       logger.info('Finished 2018-2019');
       return;
     }
-
-    logger.info(`Beginning crawl for date: ${startIndex.format('YYYY-MM-DD')}`);
 
     // Get the games for the given startIndex
     const schedule = await request(
@@ -71,10 +75,10 @@ module.exports.crawl = async () => {
 
         // Write data
         logger.info(`Writting [${events.length}] events to db`);
-        await Events.insertMany(events);
+        await client.events.insertMany(events);
 
         logger.info(`Writting [${summaries.length}] summaries to db`);
-        await Summaries.insertMany(summaries);
+        await client.summaries.insertMany(summaries);
 
         logger.info(`Finished game [${gamePk}]`);
       }
@@ -88,6 +92,6 @@ module.exports.crawl = async () => {
   } catch (ex) {
     logger.error(ex.message);
   } finally {
-    db.disconnect();
+    await db.disconnect();
   }
 };

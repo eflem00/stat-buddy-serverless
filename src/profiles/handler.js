@@ -2,24 +2,29 @@ const request = require('axios');
 const db = require('../common/db');
 const logger = require('../common/logger');
 
+let client = null;
+
 module.exports.crawl = async () => {
   try {
     // Establish db connection and models
-    await db.connect();
-    const Indexes = db.indexes();
-    const Profiles = db.profiles();
+    if (client === null) {
+      logger.info('No cached client found');
+      client = await db.connect();
+    } else {
+      logger.info('Using cached client');
+    }
 
-    const profilesIndex = await Indexes.findById('ProfilesIndex');
+    const profilesIndex = await client.indexes.findById('ProfilesIndex');
     const startIndex = Number.parseInt(profilesIndex.index, 10);
     // const startIndex = 20182019;
 
-    logger.info('Beginning crawl for year: ', startIndex);
+    logger.info(`Beginning crawl for year: ${startIndex}`);
 
     const response = await request(`http://statsapi.web.nhl.com/api/v1/teams?expand=team.roster&season=${startIndex}`);
     const teamsData = response.data.teams;
     for (let i = 0; i < teamsData.length; i += 1) {
       const teamData = teamsData[i];
-      const team = new Profiles({
+      const team = new client.profiles({
         _id: teamData.id,
         name: teamData.name,
         venue: teamData.venue.name,
@@ -32,7 +37,7 @@ module.exports.crawl = async () => {
         conference: teamData.conference.name,
         conferenceId: teamData.conference.id,
       });
-      await Profiles.findOneAndUpdate({ _id: teamData.id }, team, { upsert: true });
+      await client.profiles.findOneAndUpdate({ _id: teamData.id }, team, { upsert: true });
 
       const roster = teamData.roster.roster;
       const requests = [];
@@ -43,7 +48,7 @@ module.exports.crawl = async () => {
       const responses = await Promise.all(requests);
       for (let k = 0; k < responses.length; k += 1) {
         const playerData = responses[k].data.people[0];
-        const player = new Profiles({
+        const player = new client.profiles({
           _id: playerData.id,
           fullName: playerData.fullName,
           firstName: playerData.firstName,
@@ -76,7 +81,7 @@ module.exports.crawl = async () => {
             type: playerData.primaryPosition.type,
           };
         }
-        await Profiles.findOneAndUpdate({ _id: playerData.id }, player, { upsert: true });
+        await client.profiles.findOneAndUpdate({ _id: playerData.id }, player, { upsert: true });
       }
     }
 

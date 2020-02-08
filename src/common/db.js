@@ -2,33 +2,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const logger = require('./logger');
 
-module.exports.connect = async () => {
-  try {
-    if (process.env.NODE_ENV !== 'production') {
-      dotenv.config();
-    }
-
-    const connString = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_TARGET}?retryWrites=true&w=majority`;
-    await mongoose.connect(connString, { useFindAndModify: false, useNewUrlParser: true });
-
-    logger.info('Connected to db');
-  } catch (ex) {
-    logger.error(`Exception encountered when attempting to establish connection: ${ex.message}`);
-    throw ex;
-  }
-};
-
-module.exports.disconnect = () => {
-  try {
-    logger.info('Disconnecting from db');
-    mongoose.disconnect();
-  } catch (ex) {
-    logger.error(`Exception encountered when attempting to close connection: ${ex.message}`);
-    throw ex;
-  }
-};
-
-module.exports.events = () => {
+const events = () => {
   const client = mongoose.connection;
 
   const Event = new mongoose.Schema({
@@ -56,17 +30,13 @@ module.exports.events = () => {
     penaltyMinutes: { type: Number },
   });
 
-  let events;
   if (client.models.events) {
-    events = client.models.events;
-  } else {
-    events = client.model('events', Event);
+    return client.models.events;
   }
-
-  return events;
+  return client.model('events', Event);
 };
 
-module.exports.indexes = () => {
+const indexes = () => {
   const client = mongoose.connection;
 
   const Index = new mongoose.Schema({
@@ -75,17 +45,13 @@ module.exports.indexes = () => {
     badGames: { type: Array, required: true },
   });
 
-  let indexes;
   if (client.models.indexes) {
-    indexes = client.models.indexes;
-  } else {
-    indexes = client.model('indexes', Index);
+    return client.models.indexes;
   }
-
-  return indexes;
+  return client.model('indexes', Index);
 };
 
-module.exports.summaries = () => {
+const summaries = () => {
   const client = mongoose.connection;
 
   const Summary = new mongoose.Schema({
@@ -113,17 +79,13 @@ module.exports.summaries = () => {
     started: { type: Number },
   });
 
-  let summaries;
   if (client.models.summaries) {
-    summaries = client.models.summaries;
-  } else {
-    summaries = client.model('summaries', Summary);
+    return client.models.summaries;
   }
-
-  return summaries;
+  return client.model('summaries', Summary);
 };
 
-module.exports.profiles = () => {
+const profiles = () => {
   const client = mongoose.connection;
 
   const Profile = new mongoose.Schema({
@@ -162,12 +124,48 @@ module.exports.profiles = () => {
     type: { type: String },
   });
 
-  let profiles;
   if (client.models.profiles) {
-    profiles = client.models.profiles;
-  } else {
-    profiles = client.model('profiles', Profile);
+    return client.models.profiles;
   }
+  return client.model('profiles', Profile);
+};
 
-  return profiles;
+const connect = async () => {
+  try {
+    if (process.env.NODE_ENV !== 'production') {
+      dotenv.config();
+    }
+
+    logger.info('Connecting to db');
+
+    const connString = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_TARGET}?retryWrites=true&w=majority`;
+    await mongoose.connect(connString, { useFindAndModify: false, useNewUrlParser: true });
+
+    logger.info('Fetching models');
+
+    return {
+      indexes: indexes(),
+      events: events(),
+      summaries: summaries(),
+      profiles: profiles(),
+    };
+  } catch (ex) {
+    logger.error(`Exception encountered when attempting to establish connection: ${ex.message}`);
+    throw ex;
+  }
+};
+
+const disconnect = async () => {
+  try {
+    logger.info('Disconnecting from db');
+    await mongoose.disconnect();
+  } catch (ex) {
+    logger.error(`Exception encountered when attempting to close connection: ${ex.message}`);
+    throw ex;
+  }
+};
+
+module.exports = {
+  connect,
+  disconnect,
 };
