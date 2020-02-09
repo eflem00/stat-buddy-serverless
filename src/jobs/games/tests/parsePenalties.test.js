@@ -1,5 +1,5 @@
 const parsePenalties = require('../parsePenalties');
-const constants = require('../../common/constants');
+const constants = require('../../../common/constants');
 
 describe('Test the parsePenalties Method', () => {
   const gameEvents = {

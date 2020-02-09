@@ -1,4 +1,4 @@
-const constants = require('../common/constants');
+const constants = require('../../common/constants');
 
 function parseBoxScore(players, gameData, teamId, teamStatus, opposingTeamId) {
   const events = [];

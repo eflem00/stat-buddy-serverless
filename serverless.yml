@@ -9,10 +9,17 @@ provider:
 
 functions:
   events:
-    handler: src/events/handler.crawl
+    handler: src/api/events/handler.get
+    events:
+      - http:
+          path: events
+          method: get
+          cors: true
+  games:
+    handler: src/jobs/games/handler.crawl
     events:
       - schedule: cron(0/1 * * * ? *)
   profiles:
-    handler: src/profiles/handler.crawl
+    handler: src/jobs/profiles/handler.crawl
     events:
       - schedule: cron(0/1 * * * ? *)

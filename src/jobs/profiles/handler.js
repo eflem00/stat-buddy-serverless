@@ -1,6 +1,6 @@
 const request = require('axios');
-const db = require('../common/db');
-const logger = require('../common/logger');
+const db = require('../../common/db');
+const logger = require('../../common/logger');
 
 let client = null;
 

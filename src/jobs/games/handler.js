@@ -5,9 +5,9 @@ const constructLivePlays = require('./constructLivePlays');
 const parsePenalties = require('./parsePenalties');
 const parseBoxScores = require('./parseBoxScores');
 const parseGoaliePulls = require('./parseGoaliePulls');
-const constants = require('../common/constants');
-const db = require('../common/db');
-const logger = require('../common/logger');
+const constants = require('../../common/constants');
+const db = require('../../common/db');
+const logger = require('../../common/logger');
 
 let client = null;
 

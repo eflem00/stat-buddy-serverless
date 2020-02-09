@@ -1,5 +1,5 @@
 const parseLivePlays = require('../parseLivePlays');
-const constants = require('../../common/constants');
+const constants = require('../../../common/constants');
 
 let gamePk;
 let gameEvents;

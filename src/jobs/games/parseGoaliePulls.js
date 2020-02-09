@@ -1,4 +1,4 @@
-const timeHelper = require('../common/timeHelper');
+const timeHelper = require('../../common/timeHelper');
 
 function findGoaliePulls(goalies, gameShifts, teamId, gameType) {
   const goaliePulls = [];

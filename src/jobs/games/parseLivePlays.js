@@ -1,5 +1,5 @@
-const timeHelper = require('../common/timeHelper');
-const constants = require('../common/constants');
+const timeHelper = require('../../common/timeHelper');
+const constants = require('../../common/constants');
 
 module.exports = function parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls) {
   const events = [];

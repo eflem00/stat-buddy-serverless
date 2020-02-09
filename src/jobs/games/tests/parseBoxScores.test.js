@@ -1,5 +1,5 @@
 const parseBoxScores = require('../parseBoxScores');
-const timeHelper = require('../../common/timeHelper');
+const timeHelper = require('../../../common/timeHelper');
 
 const gamePk = 2017020001;
 const gameEvents = {
