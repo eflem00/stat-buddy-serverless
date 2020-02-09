@@ -6,7 +6,6 @@ let client = null;
 
 module.exports.crawl = async () => {
   try {
-    // Establish db connection and models
     if (client === null) {
       logger.info('No cached client found');
       client = await db.connect();
@@ -14,7 +13,10 @@ module.exports.crawl = async () => {
       logger.info('Using cached client');
     }
 
-    const profilesIndex = await client.indexes.findById('ProfilesIndex');
+    const Indexes = client.model('indexes');
+    const Profiles = client.model('profiles');
+
+    const profilesIndex = await Indexes.findById('ProfilesIndex');
     const startIndex = Number.parseInt(profilesIndex.index, 10);
     // const startIndex = 20182019;
 
@@ -24,7 +26,7 @@ module.exports.crawl = async () => {
     const teamsData = response.data.teams;
     for (let i = 0; i < teamsData.length; i += 1) {
       const teamData = teamsData[i];
-      const team = new client.profiles({
+      const team = new Profiles({
         _id: teamData.id,
         name: teamData.name,
         venue: teamData.venue.name,
@@ -37,7 +39,7 @@ module.exports.crawl = async () => {
         conference: teamData.conference.name,
         conferenceId: teamData.conference.id,
       });
-      await client.profiles.findOneAndUpdate({ _id: teamData.id }, team, { upsert: true });
+      await Profiles.findOneAndUpdate({ _id: teamData.id }, team, { upsert: true });
 
       const roster = teamData.roster.roster;
       const requests = [];
@@ -48,7 +50,7 @@ module.exports.crawl = async () => {
       const responses = await Promise.all(requests);
       for (let k = 0; k < responses.length; k += 1) {
         const playerData = responses[k].data.people[0];
-        const player = new client.profiles({
+        const player = new Profiles({
           _id: playerData.id,
           fullName: playerData.fullName,
           firstName: playerData.firstName,
@@ -81,7 +83,7 @@ module.exports.crawl = async () => {
             type: playerData.primaryPosition.type,
           };
         }
-        await client.profiles.findOneAndUpdate({ _id: playerData.id }, player, { upsert: true });
+        await Profiles.findOneAndUpdate({ _id: playerData.id }, player, { upsert: true });
       }
     }
 
@@ -91,7 +93,5 @@ module.exports.crawl = async () => {
     await profilesIndex.save();
   } catch (ex) {
     logger.error(`Ex: ${ex}`);
-  } finally {
-    db.disconnect();
   }
 };

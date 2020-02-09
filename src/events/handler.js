@@ -13,24 +13,22 @@ let client = null;
 
 module.exports.crawl = async () => {
   try {
-    // Establish db connection and models
-
-    if (client === null) {
+    if (!client) {
       logger.warn('No cached client found');
       client = await db.connect();
     } else {
       logger.info('Using cached client');
     }
 
-    const eventsIndex = await client.indexes.findById('EventsIndex');
-    const startIndex = moment(eventsIndex.index);
-    // const startIndex = moment('2019-06-18');
-    logger.info(`Beginning crawl for date: ${startIndex.format('YYYY-MM-DD')}`);
+    const Indexes = client.model('indexes');
+    const Events = client.model('events');
+    const Summaries = client.model('summaries');
 
-    if (startIndex.format() === moment('2019-06-18').format()) {
-      logger.info('Finished 2018-2019');
-      return;
-    }
+    const eventsIndex = await Indexes.findById('EventsIndex');
+    const startIndex = moment(eventsIndex.index);
+    // const startIndex = moment('2019-08-01);
+
+    logger.info(`Beginning crawl for date: ${startIndex.format('YYYY-MM-DD')}`);
 
     // Get the games for the given startIndex
     const schedule = await request(
@@ -67,7 +65,7 @@ module.exports.crawl = async () => {
           const goaliePulls = parseGoaliePulls(gameEvents, gameShifts);
           events = parseLivePlays(gamePk, gameEvents, gameShifts, gamePenalties, goaliePulls);
         } else {
-          logger.info(`GAME MISSING: [${gamePk}]`);
+          logger.warn(`Game Missing: [${gamePk}]`);
           eventsIndex.badGames.push(gamePk);
           events = constructLivePlays(gamePk, gameEvents);
         }
@@ -75,10 +73,10 @@ module.exports.crawl = async () => {
 
         // Write data
         logger.info(`Writting [${events.length}] events to db`);
-        await client.events.insertMany(events);
+        await Events.insertMany(events);
 
         logger.info(`Writting [${summaries.length}] summaries to db`);
-        await client.summaries.insertMany(summaries);
+        await Summaries.insertMany(summaries);
 
         logger.info(`Finished game [${gamePk}]`);
       }
@@ -91,7 +89,5 @@ module.exports.crawl = async () => {
     logger.info(`Finished crawling for date: ${startIndex.subtract(1, 'days').format('YYYY-MM-DD')}`);
   } catch (ex) {
     logger.error(ex.message);
-  } finally {
-    await db.disconnect();
   }
 };
