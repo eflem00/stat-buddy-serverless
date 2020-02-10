@@ -15,25 +15,17 @@ app.use(express.json());
 app.use(sanitizer());
 app.use(cors());
 
-// Request Logger
+// Request context
 app.use((req, res, next) => {
   logger.info(`Request: ${req.method} ${req.url}`);
+  res.locals.requestTime = Date.now();
   next();
-});
-
-// Global Error Handler
-app.use((err, req, res, next) => {
-  logger.error(err.message);
-  res.status(400).json({ message: 'Invalid Request' });
 });
 
 // Db client init
 app.use(async (req, res, next) => {
-  if (client === null) {
-    logger.info('No cached client found');
+  if (!client) {
     client = await db.connect();
-  } else {
-    logger.info('Using cached client');
   }
   res.locals.client = {
     Events: client.model('events'),
@@ -50,5 +42,20 @@ app.get('/', (req, res) => {
 
 // Controllers
 app.use('/stats', stats);
+
+// Response context
+// TODO: This doesn't get hit when res. is called
+app.use((req, res, next) => {
+  logger.info(`Response: Code [${res.statusCode}] Time [${Date.now() - res.locals.requestTime}]`);
+  next();
+});
+
+// Error Handler
+// TODO: This doesn't get hit when an error is thrown
+//       only when next(error) is called
+app.use((error, req, res, next) => {
+  logger.error(error.message);
+  res.status(400).json({ message: 'Invalid Request' });
+});
 
 module.exports.app = serverless(app);

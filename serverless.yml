@@ -6,6 +6,9 @@ provider:
   region: 'us-west-2'
   stage: prod
 
+plugins:
+  - serverless-offline
+
 functions:
   api:
     handler: src/api/index.app

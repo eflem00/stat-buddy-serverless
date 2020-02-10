@@ -6,7 +6,7 @@
   "scripts": {
     "local:games": "serverless invoke local --function games",
     "local:profiles": "serverless invoke local --function profiles",
-    "local:api": "serverless invoke local --function api",
+    "local:api": "serverless offline start",
     "remote:games": "serverless invoke -f games -l",
     "remote:profiles": "serverless invoke -f profiles -l",
     "remote:api": "serverless invoke -f api -l",
@@ -44,6 +44,7 @@
     "eslint-plugin-prettier": "^3.1.0",
     "eslint-plugin-react": "^7.13.0",
     "jest": "^24.8.0",
-    "prettier": "^1.18.2"
+    "prettier": "^1.18.2",
+    "serverless-offline": "^5.12.1"
   }
 }
