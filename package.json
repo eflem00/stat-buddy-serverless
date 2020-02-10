@@ -6,14 +6,14 @@
   "scripts": {
     "local:games": "serverless invoke local --function games",
     "local:profiles": "serverless invoke local --function profiles",
-    "local:events": "serverless invoke local --function events",
+    "local:api": "serverless invoke local --function api",
     "remote:games": "serverless invoke -f games -l",
     "remote:profiles": "serverless invoke -f profiles -l",
-    "remote:events": "serverless invoke -f events -l",
+    "remote:api": "serverless invoke -f api -l",
     "deploy": "serverless deploy -v",
     "deploy:games": "serverless deploy function -f games",
     "deploy:profiles": "serverless deploy function -f profiles",
-    "deploy:events": "serverless deploy function -f events",
+    "deploy:api": "serverless deploy function -f api",
     "lint": "eslint ./src",
     "test": "jest --coverage",
     "test:watch": "jest --watchAll",
@@ -23,9 +23,13 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^0.18.0",
+    "cors": "^2.8.5",
     "dotenv": "^8.0.0",
+    "express": "^4.17.1",
+    "express-sanitizer": "^1.0.5",
     "moment": "^2.24.0",
     "mongoose": "^5.8.11",
+    "serverless-http": "^2.3.1",
     "winston": "^3.2.1"
   },
   "devDependencies": {

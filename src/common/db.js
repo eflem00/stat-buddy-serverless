@@ -108,6 +108,7 @@ const connect = async () => {
       useNewUrlParser: true,
       bufferCommands: false, // Disable mongoose buffering
       bufferMaxEntries: 0, // and MongoDB driver buffering
+      useUnifiedTopology: true,
     });
 
     conn.model('indexes', new mongoose.Schema(Indexes));

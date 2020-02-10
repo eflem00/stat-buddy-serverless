@@ -4,17 +4,14 @@ provider:
   name: aws
   runtime: nodejs12.x
   region: 'us-west-2'
-  timeout: 280
   stage: prod
 
 functions:
-  events:
-    handler: src/api/events/handler.get
+  api:
+    handler: src/api/index.app
     events:
-      - http:
-          path: events
-          method: get
-          cors: true
+      - http: ANY /
+      - http: 'ANY {proxy+}'
   games:
     handler: src/jobs/games/handler.crawl
     events:
