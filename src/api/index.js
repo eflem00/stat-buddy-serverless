@@ -6,7 +6,7 @@ const stats = require('./controllers/stats');
 const db = require('../common/db');
 const logger = require('../common/logger');
 
-let client = null;
+let connection = null;
 
 const app = express();
 
@@ -24,14 +24,15 @@ app.use((req, res, next) => {
 
 // Db client init
 app.use(async (req, res, next) => {
-  if (!client) {
-    client = await db.connect();
+  if (!connection) {
+    connection = await db.connect();
+    app.locals.client = {
+      connection,
+      Events: connection.model('events'),
+      Summaries: connection.model('summaries'),
+      Profiles: connection.model('profiles'),
+    };
   }
-  res.locals.client = {
-    Events: client.model('events'),
-    Summaries: client.model('summaries'),
-    Profiles: client.model('profiles'),
-  };
   next();
 });
 
@@ -44,15 +45,13 @@ app.get('/', (req, res) => {
 app.use('/stats', stats);
 
 // Response context
-// TODO: This doesn't get hit when res. is called
 app.use((req, res, next) => {
   logger.info(`Response: Code [${res.statusCode}] Time [${Date.now() - res.locals.requestTime}]`);
   next();
 });
 
 // Error Handler
-// TODO: This doesn't get hit when an error is thrown
-//       only when next(error) is called
+// eslint-disable-next-line no-unused-vars
 app.use((error, req, res, next) => {
   logger.error(error.message);
   res.status(400).json({ message: 'Invalid Request' });

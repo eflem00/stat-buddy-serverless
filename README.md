@@ -2,9 +2,10 @@
 
 ## Overview:
 
-- This is a serverless crawler that runs on a cron job
-- It Reads a date index from db and writes all relevant records for that given day
-- It Increments the index after successfully writing the data
+- This is a serverless application that has two functions
+  1. Async jobs that run on a cron schedule and crawl nhl data into mongodb collections
+  2. RESTful APIs to surface that data in logical and optimized interface
+- This app is intended to run against a mongodb atlas cluster or some other hosted mongo solution
 
 ## Note:
 
@@ -13,8 +14,9 @@
 ## Local Install:
 
 - npm install -g serverless
-- npm install in project folder
-- Install Mongodb locally
+- create mongodb atlas cluster
+- git clone project
+- npm install
 - Add a .env file to the root directory with:
   - DB_USER=your-user
   - DB_PASS=your-password
